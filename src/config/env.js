@@ -1,4 +1,4 @@
-require("dotenv").config();
+import "dotenv/config";
 
 const env = {
   nodeEnv: process.env.NODE_ENV || "development",
@@ -7,4 +7,4 @@ const env = {
   databaseUrl: process.env.DATABASE_URL,
 };
 
-module.exports = env;
+export default env;

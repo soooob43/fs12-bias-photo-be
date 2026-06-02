@@ -1,9 +1,9 @@
-const cors = require("cors");
-const express = require("express");
-const env = require("./config/env");
-const { getHealth } = require("./controllers/healthController");
-const { errorHandler } = require("./middlewares/errorHandler");
-const { notFoundHandler } = require("./middlewares/notFoundHandler");
+import cors from "cors";
+import express from "express";
+import env from "./config/env.js";
+import { getHealth } from "./controllers/healthController.js";
+import { errorHandler } from "./middlewares/errorHandler.js";
+import { notFoundHandler } from "./middlewares/notFoundHandler.js";
 
 const app = express();
 
@@ -24,4 +24,4 @@ app.listen(env.port, () => {
   console.log(`Server is running on port ${env.port}`);
 });
 
-module.exports = app;
+export default app;

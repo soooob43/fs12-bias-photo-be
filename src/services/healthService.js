@@ -5,6 +5,4 @@ function getHealth() {
   };
 }
 
-module.exports = {
-  getHealth,
-};
+export { getHealth };
