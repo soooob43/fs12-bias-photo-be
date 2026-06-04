@@ -1,5 +1,5 @@
 import express from 'express';
-import { signupSchema } from '../schemas/auth.schema.js';
+import { loginSchema, signupSchema } from '../schemas/auth.schema.js';
 import validate from '../middlewares/validate.js';
 import authService from '../services/authService.js';
 
@@ -19,5 +19,12 @@ authController.post(
     }
   },
 );
+
+authController.post('/login', validate(loginSchema), async (req, res, next) => {
+  try {
+  } catch (error) {
+    next(error);
+  }
+});
 
 export default authController;

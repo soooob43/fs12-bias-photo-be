@@ -22,3 +22,12 @@ export const signupSchema = z.object({
     .min(1, '닉네임을 입력해주세요.')
     .max(20, '닉네임은 20자 이하여야 합니다.'),
 });
+
+export const loginSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, '이메일을 입력해주세요.')
+    .email('이메일 형식이 올바르지 않습니다.'),
+  password: z.string().trim().min(1, '비밀번호를 입력해주세요.'),
+});
