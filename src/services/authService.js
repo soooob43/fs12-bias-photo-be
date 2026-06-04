@@ -16,7 +16,7 @@ const signup = async (signupData) => {
     nickname: signupData.nickname,
   });
 
-  return sanitizedUser(user);
+  return user;
 };
 
 const sanitizedUser = (user) => {

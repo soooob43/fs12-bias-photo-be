@@ -9,6 +9,12 @@ const findByEmail = async (email) => {
 const createUser = async (userData) => {
   return await prisma.user.create({
     data: userData,
+    select: {
+      id: true,
+      email: true,
+      nickname: true,
+      provider: true,
+    },
   });
 };
 
