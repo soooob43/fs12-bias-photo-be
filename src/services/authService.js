@@ -5,7 +5,7 @@ const signup = async (signupData) => {
   const existingUser = await authRepository.findByEmail(signupData.email);
   if (existingUser) {
     const error = new Error('이미 가입된 이메일입니다.');
-    error.status = 409;
+    error.statusCode = 409;
     throw error;
   }
 

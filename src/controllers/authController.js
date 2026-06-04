@@ -11,7 +11,9 @@ authController.post(
   async (req, res, next) => {
     try {
       const user = await authService.signup(req.validatedData);
-      res.status(201).json({ message: '회원가입이 완료되었습니다.', user });
+      return res
+        .status(201)
+        .json({ message: '회원가입이 완료되었습니다.', user });
     } catch (error) {
       next(error);
     }
