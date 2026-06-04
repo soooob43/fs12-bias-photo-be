@@ -1,6 +1,6 @@
 function getHealth() {
   return {
-    status: "ok",
+    status: 'ok',
     timestamp: new Date().toISOString(),
   };
 }
