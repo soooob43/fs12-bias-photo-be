@@ -41,12 +41,23 @@ const login = async (loginData) => {
     refreshToken,
   });
 
-  return { accessToken, refreshToken, user: sanitizeUser(user) };
+  return { accessToken, refreshToken };
 };
 
-const updateUser = async (id, data) => {
-  const user = await authRepository.updateUser(id, data);
-  return sanitizedUser(user);
+const refresh = async (userId, refreshToken) => {
+  const user = await authRepository.findById(userId);
+
+  if (!user || user.refreshToken !== refreshToken) {
+    const error = new Error('유효하지 않은 토큰입니다.');
+    error.statusCode = 401;
+    throw error;
+  }
+
+  const newAccessToken = generateAccessToken({ userId });
+  const newRefreshToken = generateRefreshToken({ userId });
+  await authRepository.updateUser(userId, { refreshToken: newRefreshToken });
+
+  return { newAccessToken, newRefreshToken };
 };
 
 const hashPassword = async (password) => {
@@ -62,6 +73,7 @@ const generateAccessToken = (payload) => {
     expiresIn: '30m',
   });
 };
+
 const generateRefreshToken = (payload) => {
   return jwt.sign(payload, process.env.JWT_SECRET, {
     expiresIn: '2w',
@@ -81,6 +93,7 @@ const userProfileResponse = (user) => {
 const authService = {
   signup,
   login,
+  refresh,
 };
 
 export default authService;

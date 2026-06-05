@@ -6,6 +6,12 @@ const findByEmail = async (email) => {
   });
 };
 
+const findById = async (id) => {
+  return await prisma.user.findUnique({
+    where: { id },
+  });
+};
+
 const createUser = async (userData) => {
   return prisma.$transaction(async (tx) => {
     const user = await tx.user.create({
@@ -35,6 +41,7 @@ const updateUser = async (id, data) => {
 
 const authRepository = {
   findByEmail,
+  findById,
   createUser,
   updateUser,
 };

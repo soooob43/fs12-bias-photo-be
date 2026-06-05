@@ -1,6 +1,7 @@
 import cors from 'cors';
 import express from 'express';
 import env from './config/env.js';
+import cookieParser from 'cookie-parser';
 import { getHealth } from './controllers/healthController.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
@@ -15,6 +16,7 @@ app.use(
   }),
 );
 app.use(express.json());
+app.use(cookieParser());
 
 app.get('/health', getHealth);
 

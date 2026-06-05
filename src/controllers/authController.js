@@ -2,6 +2,7 @@ import express from 'express';
 import { loginSchema, signupSchema } from '../schemas/auth.schema.js';
 import validate from '../middlewares/validate.js';
 import authService from '../services/authService.js';
+import { verifyRefreshToken } from '../middlewares/auth.js';
 
 const authController = express.Router();
 
@@ -30,8 +31,24 @@ authController.post('/login', validate(loginSchema), async (req, res, next) => {
     });
     return res.status(200).json({
       accessToken: result.accessToken,
-      user: result.user,
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+authController.post('/refresh', verifyRefreshToken, async (req, res, next) => {
+  try {
+    const { newAccessToken, newRefreshToken } = await authService.refresh(
+      req.auth.userId,
+      req.cookies.refreshToken,
+    );
+    res.cookie('refreshToken', newRefreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'none',
+    });
+    return res.status(200).json({ accessToken: newAccessToken });
   } catch (error) {
     next(error);
   }
