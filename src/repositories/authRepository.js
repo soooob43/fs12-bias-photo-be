@@ -18,9 +18,19 @@ const createUser = async (userData) => {
   });
 };
 
+const updateUser = async (id, data) => {
+  return await prisma.user.update({
+    where: {
+      id,
+    },
+    data,
+  });
+};
+
 const authRepository = {
   findByEmail,
   createUser,
+  updateUser,
 };
 
 export default authRepository;

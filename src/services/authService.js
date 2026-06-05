@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import authRepository from '../repositories/authRepository.js';
 
 const signup = async (signupData) => {
@@ -9,7 +10,7 @@ const signup = async (signupData) => {
     throw error;
   }
 
-  const hashedPassword = await bcrypt.hash(signupData.password, 10);
+  const hashedPassword = await hashPassword(signupData.password);
   const user = await authRepository.createUser({
     email: signupData.email,
     password: hashedPassword,
@@ -33,13 +34,37 @@ const login = async (loginData) => {
     error.statusCode = 401;
     throw error;
   }
+
+  const accessToken = generateAccessToken({ userId: user.id });
+  const refreshToken = generateRefreshToken({ userId: user.id });
+  await authRepository.updateUser(user.id, {
+    refreshToken,
+  });
+};
+
+const updateUser = async (id, data) => {
+  const user = await authRepository.updateUser(id, data);
+  return sanitizedUser(user);
+};
+
+const hashPassword = async (password) => {
+  return bcrypt.hash(password, 10);
 };
 
 const comparePassword = async (inputPassword, hashPassword) => {
   return bcrypt.compare(inputPassword, hashPassword);
 };
 
-const createToken;
+const generateAccessToken = (payload) => {
+  return jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: '30m',
+  });
+};
+const generateRefreshToken = (payload) => {
+  return jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: '2w',
+  });
+};
 
 const sanitizedUser = (user) => {
   const { password, refreshToken, ...rest } = user;
