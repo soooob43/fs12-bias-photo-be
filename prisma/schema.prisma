@@ -149,6 +149,7 @@ model Card {
   // Relations
   creator       User            @relation("CardCreator", fields: [creatorId], references: [id])
   ownerships    CardOwnership[]
+  transactions Transaction[]
 
   @@map("cards")
 }
@@ -164,15 +165,17 @@ model CardOwnership {
   purchasePrice Int             @map("purchase_price")
   /// 포토카드 현재 상태
   status        OwnershipStatus
+  /// 거래 내역 아이디
+  transactionId Int?          @map("transaction_id")
   /// 생성 날짜
   createdAt     DateTime        @default(now()) @map("created_at")
   /// 수정 날짜
   updatedAt     DateTime        @updatedAt @map("updated_at")
 
   // Relations
-  card                 Card                 @relation(fields: [cardId], references: [id])
-  owner                User                 @relation("CardOwner", fields: [ownerId], references: [id])
-  transactions         Transaction[]
+  card                 Card                 @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  owner                User                 @relation("CardOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  transaction          Transaction?         @relation(fields: [transactionId], references: [id])
   exchangeOffers       ExchangeOffer[]
   transactionHistories TransactionHistory[]
 
@@ -206,8 +209,9 @@ model Transaction {
   isDeleted           Boolean   @default(false) @map("is_deleted")
 
   // Relations
-  seller         User            @relation("TransactionSeller", fields: [sellerId], references: [id])
-  card           CardOwnership   @relation(fields: [cardId], references: [id])
+  seller         User            @relation("TransactionSeller", fields: [sellerId], references: [id], onDelete: Cascade)
+  card           Card   @relation(fields: [cardId], references: [id])
+  ownerships     CardOwnership[]
   exchangeOffers ExchangeOffer[] 
 
   @@map("transactions")
@@ -230,9 +234,9 @@ model ExchangeOffer {
   isDeleted     Boolean  @default(false) @map("is_deleted")
 
   // Relations
-  listing       Transaction   @relation(fields: [listingId], references: [id])
-  proposer      User          @relation("ExchangeProposer", fields: [proposerId], references: [id])
-  offeredCard   CardOwnership @relation(fields: [offeredCardId], references: [id])
+  listing       Transaction   @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  proposer      User          @relation("ExchangeProposer", fields: [proposerId], references: [id], onDelete: Cascade)
+  offeredCard   CardOwnership @relation(fields: [offeredCardId], references: [id], onDelete: Cascade)
 
   @@map("exchange_offers")
 }
@@ -254,7 +258,7 @@ model Notification {
   isDeleted Boolean          @default(false) @map("is_deleted")
 
   // Relations
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notifications")
 }
@@ -288,7 +292,7 @@ model PointHistory {
   createdAt DateTime         @default(now()) @map("created_at")
 
   // Relations
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("points_histories")
 }
@@ -304,7 +308,7 @@ model RandomBox {
   lastOpenedAt DateTime @default(now()) @map("last_opened_at")
 
   // Relations
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("random_boxes")
 }
