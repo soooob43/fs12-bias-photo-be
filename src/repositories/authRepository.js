@@ -7,14 +7,20 @@ const findByEmail = async (email) => {
 };
 
 const createUser = async (userData) => {
-  return await prisma.user.create({
-    data: userData,
-    select: {
-      id: true,
-      email: true,
-      nickname: true,
-      provider: true,
-    },
+  return prisma.$transaction(async (tx) => {
+    const user = await tx.user.create({
+      data: userData,
+      select: {
+        id: true,
+        email: true,
+        nickname: true,
+        provider: true,
+      },
+    });
+    await tx.userPoint.create({
+      data: { userId: user.id },
+    });
+    return user;
   });
 };
 

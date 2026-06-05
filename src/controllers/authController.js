@@ -22,15 +22,15 @@ authController.post(
 
 authController.post('/login', validate(loginSchema), async (req, res, next) => {
   try {
-    const user = await authService.login(req.validatedData);
-    res.cookie('refreshToken', user.refreshToken, {
+    const result = await authService.login(req.validatedData);
+    res.cookie('refreshToken', result.refreshToken, {
       httpOnly: true,
-      secure: true,
+      secure: false,
       sameSite: 'none',
     });
     return res.status(200).json({
-      accessToken: user.accessToken,
-      user,
+      accessToken: result.accessToken,
+      user: result.user,
     });
   } catch (error) {
     next(error);

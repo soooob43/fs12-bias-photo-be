@@ -40,6 +40,8 @@ const login = async (loginData) => {
   await authRepository.updateUser(user.id, {
     refreshToken,
   });
+
+  return { accessToken, refreshToken, user: sanitizeUser(user) };
 };
 
 const updateUser = async (id, data) => {
@@ -66,9 +68,14 @@ const generateRefreshToken = (payload) => {
   });
 };
 
-const sanitizedUser = (user) => {
-  const { password, refreshToken, ...rest } = user;
-  return rest;
+const userProfileResponse = (user) => {
+  return {
+    id: user.id,
+    email: user.email,
+    nickname: user.nickname,
+    points: user.point.balance,
+    provider: user.provider,
+  };
 };
 
 const authService = {
