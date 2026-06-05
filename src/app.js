@@ -24,7 +24,7 @@ app.get('/health', getHealth);
 app.use('/auth', authController);
 
 // 포토 카드 거래(매매)
-app.use('/transaction', transactionController);
+app.use('/transactions', transactionController);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

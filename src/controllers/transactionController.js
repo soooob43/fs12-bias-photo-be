@@ -2,6 +2,7 @@ import express from 'express';
 import transactionService from '../services/transactionService.js';
 import validate from '../middlewares/validate.js';
 import { transactionSchema } from '../schemas/transaction.schema.js';
+import { verifyAccessToken } from '../middlewares/auth.js';
 
 const transactionController = express.Router();
 
@@ -9,17 +10,17 @@ const transactionController = express.Router();
       포토 카드 판매 등록
 ----------------------------*/
 transactionController.post(
-  '/sell',
+  '/',
+  verifyAccessToken,
   validate(transactionSchema),
   async (req, res, next) => {
     try {
-      // const transactionData = req.body;
-      // const sellerId = req.user.id;
-      const { sellerId, ...rest } = req.body; // !! auth 미들웨어 구현하면 변경
+      const transactionData = req.body;
+      const sellerId = req.auth.userId;
+
       const newTransaction = await transactionService.createTransaction(
         sellerId,
-        // transactionData,
-        rest,
+        transactionData,
       );
       return res.status(201).json({
         message: '포토 카드 판매 등록이 완료되었습니다.',

@@ -22,14 +22,14 @@ async function main() {
 
   // const cardTemplate = await prisma.card.create({
   //   data: {
-  //     creatorId: 'beb74e7b-2bcf-4591-b7fe-1e93ff0f7a82',
-  //     title: '테스트용 포토카드',
+  //     creatorId: 'de414ed2-f587-41e5-8473-0267202649c6',
+  //     title: '강아지 포토카드',
   //     imageUrl:
   //       'https://marketplace.canva.com/MADAHLN-YEY/1/thumbnail_large-1/canva-puppy-MADAHLN-YEY.jpg',
-  //     description: '테스트용 강아지 이미지 입니다!',
-  //     grade: 'LEGENDARY',
-  //     genre: CardGenre.SEASON_GREETING,
-  //     minimumPrice: 10,
+  //     description: '강아지 이미지 입니다!',
+  //     grade: 'SUPER_RARE',
+  //     genre: CardGenre.CONCERT,
+  //     minimumPrice: 4,
   //     totalQuantity: 3,
   //   },
   // });
@@ -38,20 +38,20 @@ async function main() {
   //   data: [
   //     {
   //       cardId: cardTemplate.id,
-  //       ownerId: 'beb74e7b-2bcf-4591-b7fe-1e93ff0f7a82',
-  //       purchasePrice: 10,
+  //       ownerId: 'de414ed2-f587-41e5-8473-0267202649c6',
+  //       purchasePrice: 4,
   //       status: 'IN_GALLERY',
   //     },
   //     {
   //       cardId: cardTemplate.id,
-  //       ownerId: 'beb74e7b-2bcf-4591-b7fe-1e93ff0f7a82',
-  //       purchasePrice: 10,
+  //       ownerId: 'de414ed2-f587-41e5-8473-0267202649c6',
+  //       purchasePrice: 4,
   //       status: 'IN_GALLERY',
   //     },
   //     {
   //       cardId: cardTemplate.id,
-  //       ownerId: 'beb74e7b-2bcf-4591-b7fe-1e93ff0f7a82',
-  //       purchasePrice: 10,
+  //       ownerId: 'de414ed2-f587-41e5-8473-0267202649c6',
+  //       purchasePrice: 4,
   //       status: 'IN_GALLERY',
   //     },
   //   ],
