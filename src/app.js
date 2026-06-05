@@ -6,6 +6,7 @@ import { getHealth } from './controllers/healthController.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
 import authController from './controllers/authController.js';
+import transactionController from './controllers/transactionController.js';
 
 const app = express();
 
@@ -21,6 +22,9 @@ app.use(cookieParser());
 app.get('/health', getHealth);
 
 app.use('/auth', authController);
+
+// 포토 카드 거래(매매)
+app.use('/transactions', transactionController);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

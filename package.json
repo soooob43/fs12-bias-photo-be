@@ -9,7 +9,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "seed": "node prisma/seeds/seed.js"
   },
   "repository": {
     "type": "git",
