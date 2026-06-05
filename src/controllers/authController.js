@@ -22,6 +22,11 @@ authController.post(
 
 authController.post('/login', validate(loginSchema), async (req, res, next) => {
   try {
+    const user = l;
+    return res.status(200).json({
+      accessToken,
+      user,
+    });
   } catch (error) {
     next(error);
   }
