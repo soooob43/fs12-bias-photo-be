@@ -60,6 +60,10 @@ const refresh = async (userId, refreshToken) => {
   return { newAccessToken, newRefreshToken };
 };
 
+const logout = async (userId) => {
+  await authRepository.updateUser(userId, { refreshToken: null });
+};
+
 const hashPassword = async (password) => {
   return bcrypt.hash(password, 10);
 };
@@ -94,6 +98,7 @@ const authService = {
   signup,
   login,
   refresh,
+  logout,
 };
 
 export default authService;
