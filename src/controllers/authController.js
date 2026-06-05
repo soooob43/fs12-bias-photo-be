@@ -1,7 +1,8 @@
 import express from 'express';
-import { signupSchema } from '../schemas/auth.schema.js';
+import { loginSchema, signupSchema } from '../schemas/auth.schema.js';
 import validate from '../middlewares/validate.js';
 import authService from '../services/authService.js';
+import { verifyAccessToken, verifyRefreshToken } from '../middlewares/auth.js';
 
 const authController = express.Router();
 
@@ -19,5 +20,52 @@ authController.post(
     }
   },
 );
+
+authController.post('/login', validate(loginSchema), async (req, res, next) => {
+  try {
+    const result = await authService.login(req.validatedData);
+    res.cookie('refreshToken', result.refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'none',
+    });
+    return res.status(200).json({
+      accessToken: result.accessToken,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+authController.post('/refresh', verifyRefreshToken, async (req, res, next) => {
+  try {
+    const { newAccessToken, newRefreshToken } = await authService.refresh(
+      req.auth.userId,
+      req.cookies.refreshToken,
+    );
+    res.cookie('refreshToken', newRefreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'none',
+    });
+    return res.status(200).json({ accessToken: newAccessToken });
+  } catch (error) {
+    next(error);
+  }
+});
+
+authController.post('/logout', verifyRefreshToken, async (req, res, next) => {
+  try {
+    await authService.logout(req.auth.userId);
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'none',
+    });
+    return res.status(200).json({ message: '로그아웃 되었습니다.' });
+  } catch (error) {
+    next(error);
+  }
+});
 
 export default authController;
