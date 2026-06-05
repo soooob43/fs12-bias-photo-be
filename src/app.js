@@ -4,6 +4,7 @@ import env from './config/env.js';
 import { getHealth } from './controllers/healthController.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
+import authController from './controllers/authController.js';
 
 const app = express();
 
@@ -16,6 +17,8 @@ app.use(
 app.use(express.json());
 
 app.get('/health', getHealth);
+
+app.use('/auth', authController);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
