@@ -1,6 +1,37 @@
 import { CardGenre, CardGrade, OwnershipStatus } from '@prisma/client';
 import prisma from '../config/prisma.js';
 
+/*---------------------------
+판매 또는 교환 중이 아닌 카드 조회 ( + 로그인 기준 )
+  add : 2026.06.08 윤소정
+----------------------------*/
+const findAvailableCardOwnerships = async (ownerId) => {
+  //CardOwnership 조회 => 각각 카드의 소유권 ID가 판매 등록 POST에서 필요해서 
+  return prisma.cardOwnership.findMany({
+    where: {
+      ownerId,
+      status: OwnershipStatus.IN_GALLERY,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+    select: {
+      id: true,
+      card: {
+        select: {
+          id: true,
+          title: true,
+          imageUrl: true,
+          description: true,
+          grade: true,
+          genre: true,
+          minimumPrice: true,
+        },
+      },
+    },
+  });
+};
+
 const saveTransaction = async (data) => {
   return await prisma.$transaction(async (tx) => {
     const newTransaction = await tx.transaction.create({
@@ -102,6 +133,7 @@ const getTransactions = async (cursor, limit, queryOptions) => {
 const transactionRepository = {
   saveTransaction,
   getTransactions,
+  findAvailableCardOwnerships,
 };
 
 export default transactionRepository;
