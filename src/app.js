@@ -3,6 +3,8 @@ import express from 'express';
 import env from './config/env.js';
 import cookieParser from 'cookie-parser';
 import { getHealth } from './controllers/healthController.js';
+import { getMySalesController } from './controllers/mySaleController.js';
+import { verifyAccessToken } from './middlewares/auth.js'
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
 import authController from './controllers/authController.js';
@@ -26,11 +28,19 @@ app.use('/auth', authController);
 // 포토 카드 거래(매매)
 app.use('/transactions', transactionController);
 
+// 나의 판매 포토카드
+app.get(
+  '/my-sales',
+  verifyAccessToken,
+  getMySalesController,
+);
+
 app.use(notFoundHandler);
 app.use(errorHandler);
 
 app.listen(env.port, () => {
   console.log(`Server is running on port ${env.port}`);
 });
+
 
 export default app;
