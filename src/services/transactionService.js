@@ -3,6 +3,58 @@ import transactionRepository from '../repositories/transactionRepository.js';
 import prisma from '../config/prisma.js';
 
 /*---------------------------
+  포토 카드 조회
+  add : 2026.06.08 윤소정
+
+  ---반환--- 
+  [
+  {
+    cardId: 1,
+    title: 'A 카드',
+    quantity: 2,
+    ownershipIds: [10, 11]
+  },
+  {
+    cardId: 2,
+    title: 'B 카드',
+    quantity: 1,
+    ownershipIds: [20]
+  }
+]
+----------------------------*/
+const getAvailableCards = async (userId) => {
+  //소유권을 갖고 있는 카드 조회
+  const ownerships =
+    await transactionRepository.findAvailableCardOwnerships(userId);
+
+  //cardId를 기준으로 묶음 = > 발행량만큼 카드를 만들기때문
+  const cardsById = ownerships.reduce((acc, ownership) => {
+    const cardId = ownership.card.id;
+    const existingCard = acc.find((card) => card.cardId === cardId);
+
+    if (existingCard) {
+      existingCard.quantity += 1; //같은 카드가 있다면 +1
+      existingCard.ownershipIds.push(ownership.id); //카드 소유권 Id 추가
+    } else {
+      //새로운 카드인 경우 생성
+      acc.push({
+        cardId,
+        title: ownership.card.title,
+        imageUrl: ownership.card.imageUrl,
+        description: ownership.card.description,
+        grade: ownership.card.grade,
+        genre: ownership.card.genre,
+        minimumPrice: ownership.card.minimumPrice,
+        quantity: 1,
+        ownershipIds: [ownership.id],
+      });
+    }
+    return acc;
+  }, []);
+  return cardsById;
+};
+
+/*---------------------------
       포토 카드 판매 등록
 ----------------------------*/
 const createTransaction = async (sellerId, transactionData) => {
@@ -10,6 +62,17 @@ const createTransaction = async (sellerId, transactionData) => {
           검증 로직
   -------------------------*/
   const { ownershipIds, cardId } = transactionData;
+
+  const uniqueOwnershipIds = ownershipIds.filter((id, idx) => {
+    return ownershipIds.indexOf(id) === idx;
+  });
+
+  if (uniqueOwnershipIds.length !== ownershipIds.length) {
+    const error = new Error('중복된 포토카드가 선택되었습니다.');
+    error.statusCode = 400;
+    throw error;
+  }
+
   const ownerships = await prisma.cardOwnership.findMany({
     where: { id: { in: ownershipIds } },
   });
@@ -64,6 +127,7 @@ const getAllTransactionsList = async (cursor, limit, queryOptions) => {
 const transactionService = {
   createTransaction,
   getAllTransactionsList,
+  getAvailableCards,
 };
 
 export default transactionService;

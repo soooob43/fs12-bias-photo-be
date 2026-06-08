@@ -7,6 +7,27 @@ import { verifyAccessToken } from '../middlewares/auth.js';
 const transactionController = express.Router();
 
 /*---------------------------
+포토 카드 판매하기 / 교환하기 GET
+  add : 2026.06.08 윤소정
+----------------------------*/
+transactionController.get(
+  '/available-cards',
+  verifyAccessToken,
+  async (req, res, next) => {
+    try {
+      const cards = await transactionService.getAvailableCards(req.auth.userId);
+
+      return res.status(200).json({
+        message: '판매 가능한 포토카드 조회 성공',
+        data: cards,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+/*---------------------------
       포토 카드 판매 등록
 ----------------------------*/
 transactionController.post(
