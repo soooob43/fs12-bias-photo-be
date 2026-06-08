@@ -1,13 +1,16 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import authRepository from '../repositories/authRepository.js';
+import AppError from '../utils/appError.js';
 
 const signup = async (signupData) => {
   const existingUser = await authRepository.findByEmail(signupData.email);
   if (existingUser) {
-    const error = new Error('이미 가입된 이메일입니다.');
-    error.statusCode = 409;
-    throw error;
+    throw new AppError(
+      409,
+      'EMAIL_ALREADY_EXISTS',
+      '이미 가입된 이메일입니다.',
+    );
   }
 
   const hashedPassword = await hashPassword(signupData.password);
@@ -23,16 +26,22 @@ const signup = async (signupData) => {
 const login = async (loginData) => {
   const user = await authRepository.findByEmail(loginData.email);
   if (!user) {
-    const error = new Error('이메일 또는 비밀번호가 올바르지 않습니다.');
-    error.statusCode = 401;
-    throw error;
+    throw new AppError(
+      401,
+      'INVALID_CREDENTIALS',
+      '이메일 또는 비밀번호가 올바르지 않습니다.',
+    );
+  }
+  if (user.provider === 'google') {
   }
 
   const isMatch = await comparePassword(loginData.password, user.password);
   if (!isMatch) {
-    const error = new Error('이메일 또는 비밀번호가 올바르지 않습니다.');
-    error.statusCode = 401;
-    throw error;
+    throw new AppError(
+      401,
+      'INVALID_CREDENTIALS',
+      '이메일 또는 비밀번호가 올바르지 않습니다.',
+    );
   }
 
   const accessToken = generateAccessToken({ userId: user.id });
@@ -48,9 +57,7 @@ const refresh = async (userId, refreshToken) => {
   const user = await authRepository.findById(userId);
 
   if (!user || user.refreshToken !== refreshToken) {
-    const error = new Error('유효하지 않은 토큰입니다.');
-    error.statusCode = 401;
-    throw error;
+    throw new AppError(401, 'INVALID_TOKEN', '유효하지 않은 토큰입니다.');
   }
 
   const newAccessToken = generateAccessToken({ userId });
@@ -62,6 +69,13 @@ const refresh = async (userId, refreshToken) => {
 
 const logout = async (userId) => {
   await authRepository.updateUser(userId, { refreshToken: null });
+};
+
+const googleLogin = async (userId) => {
+  const accessToken = generateAccessToken({ userId });
+  const refreshToken = generateRefreshToken({ userId });
+
+  return { accessToken, refreshToken };
 };
 
 const hashPassword = async (password) => {
@@ -84,21 +98,12 @@ const generateRefreshToken = (payload) => {
   });
 };
 
-const userProfileResponse = (user) => {
-  return {
-    id: user.id,
-    email: user.email,
-    nickname: user.nickname,
-    points: user.point.balance,
-    provider: user.provider,
-  };
-};
-
 const authService = {
   signup,
   login,
   refresh,
   logout,
+  googleLogin,
 };
 
 export default authService;
