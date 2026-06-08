@@ -1,6 +1,7 @@
 import { OwnershipStatus } from '@prisma/client';
 import transactionRepository from '../repositories/transactionRepository.js';
 import prisma from '../config/prisma.js';
+import AppError from '../utils/appError.js';
 
 /*---------------------------
   포토 카드 조회
@@ -68,27 +69,36 @@ const createTransaction = async (sellerId, transactionData) => {
   });
 
   if (uniqueOwnershipIds.length !== ownershipIds.length) {
-    const error = new Error('중복된 포토카드가 선택되었습니다.');
-    error.statusCode = 400;
-    throw error;
+    throw AppError(400, 'DUPLICATE_CARDS', '중복된 포토카드가 선택되었습니다.');
   }
 
-  const ownerships = await prisma.cardOwnership.findMany({
-    where: { id: { in: ownershipIds } },
-  });
+  const ownerships =
+    await transactionRepository.findOwnershipsByIds(ownershipIds);
 
   if (ownerships.length !== ownershipIds.length) {
-    throw new Error('일부 카드를 찾을 수 없습니다. 다시 확인해 주세요.');
+    throw AppError(404, 'CARD_NOT_FOUND', '일부 카드를 찾을 수 없습니다.');
   }
   for (const ownership of ownerships) {
     if (ownership.ownerId !== sellerId) {
-      throw new Error('본인이 소유한 카드만 판매할 수 있습니다.');
+      throw AppError(
+        403,
+        'NOT_CARD_OWNER',
+        '본인이 소유한 카드만 판매할 수 있습니다.',
+      );
     }
     if (ownership.status !== OwnershipStatus.IN_GALLERY) {
-      throw new Error('현재 갤러리에 보유 중인 카드만 판매할 수 있습니다.');
+      throw AppError(
+        400,
+        'CARD_NOT_IN_GALLERY',
+        '현재 갤러리에 보유 중인 카드만 판매할 수 있습니다.',
+      );
     }
     if (ownership.cardId !== cardId) {
-      throw new Error('선택한 카드 중에 다른 종류의 도안이 섞여 있습니다.');
+      throw AppError(
+        400,
+        'MIXED_CARD_TYPES',
+        '선택한 카드 중에 다른 종류의 도안이 섞여 있습니다.',
+      );
     }
   }
 
