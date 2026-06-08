@@ -37,10 +37,33 @@ transactionController.post(
 -------------------------------------*/
 transactionController.get('/', async (req, res, next) => {
   try {
-    const transactions = await transactionService.getAllTransactionsList();
+    const {
+      cursor,
+      limit,
+      keyword,
+      filterType, // 'GRADE', 'GENRE', 'SALE_STATUS'
+      filterValue, // 'SUPER_RARE', 'SOLD_OUT', etc..
+      sortBy, // 'PRICE', 'DATE'
+      sortOrder, // 'ASC', 'DESC'
+    } = req.query;
+
+    const queryOptions = {
+      keyword,
+      filterType,
+      filterValue,
+      sortBy,
+      sortOrder,
+    };
+
+    const result = await transactionService.getAllTransactionsList(
+      cursor,
+      limit,
+      queryOptions,
+    );
     return res.status(200).json({
       message: '포토 카드 판매 조회가 완료되었습니다.',
-      data: transactions,
+      data: result.transactions,
+      nextCursor: result.nextCursor,
     });
   } catch (error) {
     next(error);
