@@ -68,4 +68,11 @@ authController.post('/logout', verifyRefreshToken, async (req, res, next) => {
   }
 });
 
+authController.get(
+  '/google',
+  passport.authenticate('google', {
+    scope: ['profile', 'email'],
+  }),
+);
+
 export default authController;
