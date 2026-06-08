@@ -62,6 +62,17 @@ const createTransaction = async (sellerId, transactionData) => {
           검증 로직
   -------------------------*/
   const { ownershipIds, cardId } = transactionData;
+
+  const uniqueOwnershipIds = ownershipIds.filter((id, idx) => {
+    return ownershipIds.indexOf(id) === idx;
+  });
+
+  if (uniqueOwnershipIds.length !== ownershipIds.length) {
+    const error = new Error('중복된 포토카드가 선택되었습니다.');
+    error.statusCode = 400;
+    throw error;
+  }
+
   const ownerships = await prisma.cardOwnership.findMany({
     where: { id: { in: ownershipIds } },
   });
