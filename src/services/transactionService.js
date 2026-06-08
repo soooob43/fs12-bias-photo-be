@@ -40,10 +40,25 @@ const createTransaction = async (sellerId, transactionData) => {
 /*---------------------------
   포토 카드 판매 내역 전체 조회
 ----------------------------*/
-const getAllTransactionsList = async () => {
-  const data = await transactionRepository.getTransactions();
+const getAllTransactionsList = async (cursor, limit, queryOptions) => {
+  const parsedLimit = parseInt(limit, 10) || 10;
+  const parsedCursor = cursor ? parseInt(cursor, 10) : undefined;
 
-  return data;
+  const transactions = await transactionRepository.getTransactions(
+    parsedCursor,
+    parsedLimit,
+    queryOptions,
+  );
+
+  let nextCursor = null;
+  if (transactions.length === parsedLimit) {
+    nextCursor = transactions[transactions.length - 1].id;
+  }
+
+  return {
+    transactions,
+    nextCursor,
+  };
 };
 
 const transactionService = {
