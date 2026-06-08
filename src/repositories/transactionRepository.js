@@ -6,7 +6,7 @@ import prisma from '../config/prisma.js';
   add : 2026.06.08 윤소정
 ----------------------------*/
 const findAvailableCardOwnerships = async (ownerId) => {
-  //CardOwnership 조회 => 각각 카드의 소유권 ID가 판매 등록 POST에서 필요해서 
+  //CardOwnership 조회 => 각각 카드의 소유권 ID가 판매 등록 POST에서 필요해서
   return prisma.cardOwnership.findMany({
     where: {
       ownerId,
@@ -130,10 +130,19 @@ const getTransactions = async (cursor, limit, queryOptions) => {
   return await prisma.transaction.findMany(query);
 };
 
+const findOwnershipsByIds = async (ownershipIds) => {
+  return await prisma.cardOwnership.findMany({
+    where: {
+      id: { in: ownershipIds },
+    },
+  });
+};
+
 const transactionRepository = {
   saveTransaction,
   getTransactions,
   findAvailableCardOwnerships,
+  findOwnershipsByIds,
 };
 
 export default transactionRepository;

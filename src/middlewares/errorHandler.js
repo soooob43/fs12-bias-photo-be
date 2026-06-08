@@ -1,4 +1,15 @@
 function errorHandler(err, req, res, next) {
+  console.error(err);
+
+  // 커스텀 에러 사용시, 해당 응답으로 통일
+  if (err.isAppError) {
+    return res.status(err.statusCode).json({
+      success: false,
+      errorCode: err.errorCode,
+      message: err.message,
+    });
+  }
+
   if (err.name === 'UnauthorizedError') {
     // 토큰 없음
     if (err.code === 'credentials_required') {
@@ -26,6 +37,12 @@ function errorHandler(err, req, res, next) {
 
   res.status(statusCode).json({
     message: err.message || 'Internal server error',
+  });
+
+  return res.status(500).json({
+    success: false,
+    errorCode: 'INTERNAL_SERVER_ERROR',
+    message: '서버 내부에서 예상치 못한 오류가 발생했습니다.',
   });
 }
 
