@@ -73,13 +73,13 @@ const comparePassword = async (inputPassword, hashPassword) => {
 };
 
 const generateAccessToken = (payload) => {
-  return jwt.sign(payload, process.env.JWT_SECRET, {
+  return jwt.sign(payload, process.env.JWT_ACCESS_SECRET, {
     expiresIn: '30m',
   });
 };
 
 const generateRefreshToken = (payload) => {
-  return jwt.sign(payload, process.env.JWT_SECRET, {
+  return jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
     expiresIn: '2w',
   });
 };
