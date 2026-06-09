@@ -3,6 +3,7 @@ import { loginSchema, signupSchema } from '../schemas/auth.schema.js';
 import validate from '../middlewares/validate.js';
 import authService from '../services/authService.js';
 import { verifyAccessToken, verifyRefreshToken } from '../middlewares/auth.js';
+import passport from 'passport';
 
 const authController = express.Router();
 

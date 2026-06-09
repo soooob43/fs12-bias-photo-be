@@ -2,15 +2,12 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import authRepository from '../repositories/authRepository.js';
 import AppError from '../utils/appError.js';
+import { Provider } from '@prisma/client';
 
 const signup = async (signupData) => {
   const existingUser = await authRepository.findByEmail(signupData.email);
   if (existingUser) {
-    throw new AppError(
-      409,
-      'EMAIL_ALREADY_EXISTS',
-      '이미 가입된 이메일입니다.',
-    );
+    throw AppError(409, 'EMAIL_ALREADY_EXISTS', '이미 가입된 이메일입니다.');
   }
 
   const hashedPassword = await hashPassword(signupData.password);
@@ -26,18 +23,20 @@ const signup = async (signupData) => {
 const login = async (loginData) => {
   const user = await authRepository.findByEmail(loginData.email);
   if (!user) {
-    throw new AppError(
+    throw AppError(
       401,
       'INVALID_CREDENTIALS',
       '이메일 또는 비밀번호가 올바르지 않습니다.',
     );
   }
-  if (user.provider === 'google') {
+
+  if (user.provider === 'GOOGLE') {
+    throw AppError(409, 'GOOGLE_ACCOUNT', '구글 로그인으로 가입된 계정입니다.');
   }
 
   const isMatch = await comparePassword(loginData.password, user.password);
   if (!isMatch) {
-    throw new AppError(
+    throw AppError(
       401,
       'INVALID_CREDENTIALS',
       '이메일 또는 비밀번호가 올바르지 않습니다.',
@@ -74,6 +73,8 @@ const logout = async (userId) => {
 const googleLogin = async (userId) => {
   const accessToken = generateAccessToken({ userId });
   const refreshToken = generateRefreshToken({ userId });
+
+  await authRepository.updateUser(userId, { refreshToken });
 
   return { accessToken, refreshToken };
 };
