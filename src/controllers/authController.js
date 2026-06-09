@@ -3,8 +3,11 @@ import { loginSchema, signupSchema } from '../schemas/auth.schema.js';
 import validate from '../middlewares/validate.js';
 import authService from '../services/authService.js';
 import { verifyAccessToken, verifyRefreshToken } from '../middlewares/auth.js';
+import passport from 'passport';
 
 const authController = express.Router();
+
+const isProduction = process.env.NODE_ENV === 'production';
 
 authController.post(
   '/signup',
@@ -26,8 +29,8 @@ authController.post('/login', validate(loginSchema), async (req, res, next) => {
     const result = await authService.login(req.validatedData);
     res.cookie('refreshToken', result.refreshToken, {
       httpOnly: true,
-      secure: false,
-      sameSite: 'none',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
     });
     return res.status(200).json({
       accessToken: result.accessToken,
@@ -45,8 +48,8 @@ authController.post('/refresh', verifyRefreshToken, async (req, res, next) => {
     );
     res.cookie('refreshToken', newRefreshToken, {
       httpOnly: true,
-      secure: false,
-      sameSite: 'none',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
     });
     return res.status(200).json({ accessToken: newAccessToken });
   } catch (error) {
@@ -57,15 +60,47 @@ authController.post('/refresh', verifyRefreshToken, async (req, res, next) => {
 authController.post('/logout', verifyRefreshToken, async (req, res, next) => {
   try {
     await authService.logout(req.auth.userId);
+
     res.clearCookie('refreshToken', {
       httpOnly: true,
-      secure: false,
-      sameSite: 'none',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
     });
     return res.status(200).json({ message: '로그아웃 되었습니다.' });
   } catch (error) {
     next(error);
   }
 });
+
+authController.get(
+  '/google',
+  passport.authenticate('google', {
+    scope: ['profile', 'email'],
+  }),
+);
+
+authController.get(
+  '/google/callback',
+  passport.authenticate('google', {
+    session: false,
+  }),
+  async (req, res, next) => {
+    try {
+      const { accessToken, refreshToken } = await authService.googleLogin(
+        req.user.id,
+      );
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
+      });
+      return res.redirect(
+        `${process.env.CLIENT_URL}/oauth?accessToken=${accessToken}`,
+      );
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
 export default authController;

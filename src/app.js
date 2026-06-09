@@ -10,6 +10,9 @@ import { notFoundHandler } from './middlewares/notFoundHandler.js';
 import authController from './controllers/authController.js';
 import transactionController from './controllers/transactionController.js';
 import userController from './controllers/userController.js';
+import passport from 'passport';
+import './config/passport.js';
+import galleryController from './controllers/galleryController.js';
 
 const app = express();
 
@@ -21,6 +24,7 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser());
+app.use(passport.initialize());
 
 app.get('/health', getHealth);
 
@@ -31,12 +35,17 @@ app.use('/users', userController);
 // 포토 카드 거래(매매)
 app.use('/transactions', transactionController);
 
+<<<<<<< HEAD
 // 나의 판매 포토카드
 app.get(
   '/my-sales',
   verifyAccessToken,
   getMySalesController,
 );
+=======
+// 마이갤러리
+app.use('/gallery', galleryController);
+>>>>>>> 42aecd82d721e2bbfb7666c9b42d88450dc010f1
 
 app.use(notFoundHandler);
 app.use(errorHandler);
