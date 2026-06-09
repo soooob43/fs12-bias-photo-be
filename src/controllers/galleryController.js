@@ -6,9 +6,9 @@ import galleryService from '../services/galleryService.js';
 const galleryController = express.Router();
 
 // 회원별 마이갤러리 목록 조회
-galleryController.get('/', async (req, res, next) => {
+galleryController.get('/', verifyAccessToken, async (req, res, next) => {
   try {
-    const { userId } = req.query;
+    const userId = req.auth.userId;
     const result = await galleryService.getAllGalleryList(userId);
     return res.status(200).json({
       message: '마이갤러리 목록 조회가 완료되었습니다.',
