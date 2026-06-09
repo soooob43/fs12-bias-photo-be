@@ -9,6 +9,9 @@ import authController from './controllers/authController.js';
 import transactionController from './controllers/transactionController.js';
 import userController from './controllers/userController.js';
 import detailController from './controllers/DetailController.js';
+import passport from 'passport';
+import './config/passport.js';
+import galleryController from './controllers/galleryController.js';
 
 const app = express();
 
@@ -20,6 +23,7 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser());
+app.use(passport.initialize());
 
 app.get('/health', getHealth);
 
@@ -32,6 +36,9 @@ app.use('/transactions', transactionController);
 
 // 포토 카드 상세
 app.use('/market', detailController);
+
+// 마이갤러리
+app.use('/gallery', galleryController);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
