@@ -3,13 +3,12 @@ import express from 'express';
 import env from './config/env.js';
 import cookieParser from 'cookie-parser';
 import { getHealth } from './controllers/healthController.js';
-import { getMySalesController } from './controllers/mySaleController.js';
-import { verifyAccessToken } from './middlewares/auth.js'
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
 import authController from './controllers/authController.js';
 import transactionController from './controllers/transactionController.js';
 import userController from './controllers/userController.js';
+import mySaleController from './controllers/mySaleController.js';
 import passport from 'passport';
 import './config/passport.js';
 import galleryController from './controllers/galleryController.js';
@@ -35,17 +34,8 @@ app.use('/users', userController);
 // 포토 카드 거래(매매)
 app.use('/transactions', transactionController);
 
-<<<<<<< HEAD
 // 나의 판매 포토카드
-app.get(
-  '/my-sales',
-  verifyAccessToken,
-  getMySalesController,
-);
-=======
-// 마이갤러리
-app.use('/gallery', galleryController);
->>>>>>> 42aecd82d721e2bbfb7666c9b42d88450dc010f1
+app.use('/my-sales', mySaleController);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
@@ -53,6 +43,5 @@ app.use(errorHandler);
 app.listen(env.port, () => {
   console.log(`Server is running on port ${env.port}`);
 });
-
 
 export default app;

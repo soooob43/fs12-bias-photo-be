@@ -1,19 +1,19 @@
+import express from 'express';
 import { getMySales } from '../services/mySaleService.js';
+import { verifyAccessToken } from '../middlewares/auth.js';
 
-export const getMySalesController = async (req, res) => {
+const mySaleController = express.Router();
+
+mySaleController.get('/', verifyAccessToken, async (req, res) => {
   try {
     const sellerId = req.auth.userId;
 
     const page = Math.max(1, Number(req.query.page) || 1);
-    const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 15),);
+    const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 15));
 
     const status = req.query.status;
 
-    const allowedStatus = [
-      'ON_SALE',
-      'ON_EXCHANGE',
-      'SOLD_OUT',
-    ];
+    const allowedStatus = ['ON_SALE', 'ON_EXCHANGE', 'SOLD_OUT'];
 
     if (status && !allowedStatus.includes(status)) {
       return res.status(400).json({
@@ -33,7 +33,9 @@ export const getMySalesController = async (req, res) => {
     console.error(error);
 
     return res.status(500).json({
-      message: "나의 판매 포토카드 조회 실패",
+      message: '나의 판매 포토카드 조회 실패',
     });
   }
-};
+});
+
+export default mySaleController;

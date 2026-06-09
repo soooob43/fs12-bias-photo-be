@@ -1,8 +1,6 @@
-import prisma from "../config/prisma.js";
+import prisma from '../config/prisma.js';
 
-export const findMySales = async ({
-  sellerId,
-}) => {
+export const findMySales = async ({ sellerId }) => {
   return prisma.transaction.findMany({
     where: {
       sellerId,
@@ -28,7 +26,7 @@ export const findMySales = async ({
     },
 
     orderBy: {
-      createdAt: "desc",
+      createdAt: 'desc',
     },
   });
 };
