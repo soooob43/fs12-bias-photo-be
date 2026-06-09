@@ -48,7 +48,7 @@ async function main() {
   //     },
   //   ],
   // });
-  // 시드 파일 상단에 정의
+
   const grades = ['COMMON', 'RARE', 'SUPER_RARE', 'LEGENDARY'];
   const genres = [
     'ALBUM',
@@ -62,7 +62,6 @@ async function main() {
     'ETC',
   ];
 
-  // 랜덤 요소 선택 헬퍼 함수
   const getRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
   const allOwnerships = await prisma.cardOwnership.findMany({
@@ -74,9 +73,7 @@ async function main() {
     .sort(() => 0.5 - Math.random())
     .slice(0, 150);
 
-  // 3. 루프를 돌며 Repository 함수 호출
   for (const ownership of selectedOwnerships) {
-    // Repository의 saveTransaction 요구사항에 맞춰 데이터 구성
     const transactionData = {
       sellerId: ownership.ownerId,
       cardId: ownership.cardId,
@@ -87,7 +84,6 @@ async function main() {
       exchangeDescription: '교환 환영합니다! 편하게 연락주세요.',
     };
 
-    // ⭐️ 작성해두신 Repository 로직 호출
     await transactionRepository.saveTransaction(transactionData);
   }
 
