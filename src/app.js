@@ -8,6 +8,8 @@ import { notFoundHandler } from './middlewares/notFoundHandler.js';
 import authController from './controllers/authController.js';
 import transactionController from './controllers/transactionController.js';
 import userController from './controllers/userController.js';
+import passport from 'passport';
+import './config/passport.js';
 import galleryController from './controllers/galleryController.js';
 
 const app = express();
@@ -20,6 +22,7 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser());
+app.use(passport.initialize());
 
 app.get('/health', getHealth);
 
