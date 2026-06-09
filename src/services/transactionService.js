@@ -3,6 +3,21 @@ import transactionRepository from '../repositories/transactionRepository.js';
 import prisma from '../config/prisma.js';
 import AppError from '../utils/appError.js';
 
+const GRADES = ['COMMON', 'RARE', 'SUPER_RARE', 'LEGENDARY'];
+const GENRES = [
+  'ALBUM',
+  'CONCERT',
+  'FAN_SIGN',
+  'FAN_MEETING',
+  'SEASON_GREETING',
+  'BENEFIT',
+  'MD',
+  'COLLAB',
+  'ETC',
+  'FAN_CLUB',
+];
+const STATUSES = ['ON_SALE', 'SOLD_OUT'];
+
 /*---------------------------
   포토 카드 조회
   add : 2026.06.08 윤소정
@@ -134,10 +149,59 @@ const getAllTransactionsList = async (cursor, limit, queryOptions) => {
   };
 };
 
+/*-----------------------------------------------
+  포토 카드 판매 내역 필터 메타데이터 조회 - 최혜성
+-------------------------------------------------*/
+const getTransactionFiltersMeta = async () => {
+  // 각 옵션별 쿼리 준비
+  const gradePromises = GRADES.map(async (grade) => ({
+    grade,
+    count: await transactionRepository.countTransactionsByGrade(grade),
+  }));
+
+  const genrePromises = GENRES.map(async (genre) => ({
+    genre,
+    count: await transactionRepository.countTransactionsByGenre(genre),
+  }));
+
+  const statusPromises = STATUSES.map(async (status) => ({
+    status,
+    count: await transactionRepository.countTransactionsBySaleStatus(status),
+  }));
+
+  // 병렬 처리
+  const [gradeResults, genreResults, statusResults, totalPhotos] =
+    await Promise.all([
+      Promise.all(gradePromises),
+      Promise.all(genrePromises),
+      Promise.all(statusPromises),
+      transactionRepository.countAllTransactions(),
+    ]);
+
+  // 객체 형태로 변환
+  const counts = {
+    grade: gradeResults.reduce((acc, { grade, count }) => {
+      acc[grade] = count;
+      return acc;
+    }, {}),
+    genre: genreResults.reduce((acc, { genre, count }) => {
+      acc[genre] = count;
+      return acc;
+    }, {}),
+    saleStatus: statusResults.reduce((acc, { status, count }) => {
+      acc[status] = count;
+      return acc;
+    }, {}),
+  };
+
+  return { counts, totalPhotos };
+};
+
 const transactionService = {
   createTransaction,
   getAllTransactionsList,
   getAvailableCards,
+  getTransactionFiltersMeta,
 };
 
 export default transactionService;
