@@ -28,7 +28,7 @@ transactionController.get(
 );
 
 /*---------------------------
-      포토 카드 판매 등록
+  포토 카드 판매 등록 - 최혜성
 ----------------------------*/
 transactionController.post(
   '/',
@@ -54,7 +54,7 @@ transactionController.post(
 );
 
 /*------------------------------------
-      포토 카드 판매 내역 전체 조회
+  포토 카드 판매 내역 전체 조회 - 최혜성
 -------------------------------------*/
 transactionController.get('/', async (req, res, next) => {
   try {
@@ -85,6 +85,21 @@ transactionController.get('/', async (req, res, next) => {
       message: '포토 카드 판매 조회가 완료되었습니다.',
       data: result.transactions,
       nextCursor: result.nextCursor,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/*------------------------------------------
+  판매 포토 카드 필터 메타데이터 조회 - 최혜성
+-------------------------------------------*/
+transactionController.get('/meta', async (req, res, next) => {
+  try {
+    const metadata = await transactionService.getTransactionFiltersMeta();
+    return res.status(200).json({
+      message: '마켓 필터 메타데이터 조회가 완료되었습니다.',
+      data: metadata,
     });
   } catch (error) {
     next(error);
