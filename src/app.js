@@ -8,6 +8,7 @@ import { notFoundHandler } from './middlewares/notFoundHandler.js';
 import authController from './controllers/authController.js';
 import transactionController from './controllers/transactionController.js';
 import userController from './controllers/userController.js';
+import galleryController from './controllers/galleryController.js';
 
 const app = express();
 
@@ -28,6 +29,9 @@ app.use('/users', userController);
 
 // 포토 카드 거래(매매)
 app.use('/transactions', transactionController);
+
+// 마이갤러리
+app.use('/gallery', galleryController);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
