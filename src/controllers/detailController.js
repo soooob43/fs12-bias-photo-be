@@ -15,4 +15,70 @@ router.get('/:transactionId', async (req, res, next) => {
   }
 });
 
+router.post('/:transactionId/purchase', async (req, res, next) => {
+  try {
+    const { transactionId } = req.params;
+    const { buyerId, quantity } = req.body;
+
+    const result = await detailService.purchasePhotocard({
+      transactionId,
+      buyerId,
+      quantity,
+    });
+
+    return res.status(200).json({
+      message: '성공적으로 구매가 완료되었습니다.',
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+//교환 신청
+router.post('/:transactionId/exchange', async (req, res, next) => {
+  try {
+    const { transactionId } = req.params;
+    const { proposerId, offeredCardId, description } = req.body;
+
+    const result = await detailService.createExchangeOffer({
+      transactionId,
+      proposerId,
+      offeredCardId,
+      description,
+    });
+
+    return res.status(201).json({
+      message: '교환 제안이 성공적으로 등록되었습니다.',
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+//교환 제안 목록 조회
+router.get('/:transactionId/exchange', async (req, res, next) => {
+  try {
+    const { transactionId } = req.params;
+    const data = await detailService.getExchangeOffer(transactionId);
+    return res.status(200).json(data);
+  } catch (error) {
+    next(error);
+  }
+});
+
+//판매글 내리기 (실제 DB 작업은 update지만 delete로 표현)
+router.delete('/:transactionId', async (req, res, next) => {
+  try {
+    const { transactionId } = req.params;
+    await detailService.deleteCardTransaction(transactionId);
+    return res.status(200).json({
+      message: '해당 판매 게시글이 성공적으로 내려갔습니다.',
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
