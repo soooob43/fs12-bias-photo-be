@@ -32,6 +32,9 @@ const findAvailableCardOwnerships = async (ownerId) => {
   });
 };
 
+/*--------------------------------
+     판매 포토 카드 등록 - 최혜성
+----------------------------------*/
 const saveTransaction = async (data) => {
   return await prisma.$transaction(async (tx) => {
     const newTransaction = await tx.transaction.create({
@@ -61,6 +64,9 @@ const saveTransaction = async (data) => {
   });
 };
 
+/*----------------------------------------
+     판매 포토 카드 전체 내역 조회 - 최혜성
+------------------------------------------*/
 const getTransactions = async (cursor, limit, queryOptions) => {
   const { keyword, filterType, filterValue, sortBy, sortOrder } = queryOptions;
 
@@ -138,11 +144,52 @@ const findOwnershipsByIds = async (ownershipIds) => {
   });
 };
 
+/*--------------------------------
+  판매 포토 카드 장르별 개수 - 최혜성
+----------------------------------*/
+const countTransactionsByGenre = async (genre) => {
+  return await prisma.transaction.count({
+    where: { card: { genre } },
+  });
+};
+
+/*--------------------------------
+  판매 포토 카드 등급별 개수 - 최혜성
+----------------------------------*/
+const countTransactionsByGrade = async (grade) => {
+  return await prisma.transaction.count({
+    where: { card: { grade } },
+  });
+};
+
+/*--------------------------------------
+  판매 포토 카드 판매 여부별 개수 - 최혜성
+---------------------------------------*/
+const countTransactionsBySaleStatus = async (status) => {
+  const condition = status === 'SOLD_OUT' ? 0 : { gt: 0 };
+  return await prisma.transaction.count({
+    where: {
+      remainingQuantity: condition,
+    },
+  });
+};
+
+/*--------------------------------------
+  판매 포토 카드 내역 전체 개수 - 최혜성
+---------------------------------------*/
+const countAllTransactions = async () => {
+  return await prisma.transaction.count();
+};
+
 const transactionRepository = {
   saveTransaction,
   getTransactions,
   findAvailableCardOwnerships,
   findOwnershipsByIds,
+  countTransactionsByGenre,
+  countTransactionsByGrade,
+  countTransactionsBySaleStatus,
+  countAllTransactions,
 };
 
 export default transactionRepository;
