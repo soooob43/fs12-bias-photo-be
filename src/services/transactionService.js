@@ -2,6 +2,7 @@ import { OwnershipStatus } from '@prisma/client';
 import transactionRepository from '../repositories/transactionRepository.js';
 import prisma from '../config/prisma.js';
 import AppError from '../utils/appError.js';
+import { CardGenre, CardGrade } from '@prisma/client';
 
 const GRADES = ['COMMON', 'RARE', 'SUPER_RARE', 'LEGENDARY'];
 const GENRES = [
@@ -21,6 +22,7 @@ const STATUSES = ['ON_SALE', 'SOLD_OUT'];
 /*---------------------------
   포토 카드 조회
   add : 2026.06.08 윤소정
+  fix : 2026.06.10 검색 및 정렬 추가
 
   ---반환--- 
   [
@@ -38,10 +40,27 @@ const STATUSES = ['ON_SALE', 'SOLD_OUT'];
   }
 ]
 ----------------------------*/
-const getAvailableCards = async (userId) => {
+const getAvailableCards = async (userId, queryOptions = {}) => {
+  const keyword = queryOptions.keyword?.trim();
+  const { grade, genre } = queryOptions;
+
+  if (grade && !Object.values(CardGrade).includes(grade)) {
+    throw AppError(400, 'INVALID_CARD_GRADE', '유효하지 않은 등급입니다.');
+  }
+
+  if (genre && !Object.values(CardGenre).includes(genre)) {
+    throw AppError(400, 'INVALID_CARD_GENRE', '유효하지 않은 장르입니다. ');
+  }
+
   //소유권을 갖고 있는 카드 조회
-  const ownerships =
-    await transactionRepository.findAvailableCardOwnerships(userId);
+  const ownerships = await transactionRepository.findAvailableCardOwnerships(
+    userId,
+    {
+      keyword,
+      grade,
+      genre,
+    },
+  );
 
   //cardId를 기준으로 묶음 = > 발행량만큼 카드를 만들기때문
   const cardsById = ownerships.reduce((acc, ownership) => {
