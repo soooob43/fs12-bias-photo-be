@@ -1,5 +1,7 @@
 import { CardGenre, PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
+import { cardTemplateSeedData } from './seedData.js';
+import transactionRepository from '../../src/repositories/transactionRepository.js';
 const prisma = new PrismaClient();
 
 /*
@@ -20,18 +22,8 @@ async function main() {
 
   // 포토 카드 생성 시드 데이터
 
-  // const cardTemplate = await prisma.card.create({
-  //   data: {
-  //     creatorId: 'de414ed2-f587-41e5-8473-0267202649c6',
-  //     title: '강아지 포토카드',
-  //     imageUrl:
-  //       'https://marketplace.canva.com/MADAHLN-YEY/1/thumbnail_large-1/canva-puppy-MADAHLN-YEY.jpg',
-  //     description: '강아지 이미지 입니다!',
-  //     grade: 'SUPER_RARE',
-  //     genre: CardGenre.CONCERT,
-  //     minimumPrice: 4,
-  //     totalQuantity: 3,
-  //   },
+  // const cardTemplate = await prisma.card.createMany({
+  //   data: cardTemplateSeedData,
   // });
 
   // await prisma.cardOwnership.createMany({
@@ -56,6 +48,44 @@ async function main() {
   //     },
   //   ],
   // });
+
+  const grades = ['COMMON', 'RARE', 'SUPER_RARE', 'LEGENDARY'];
+  const genres = [
+    'ALBUM',
+    'CONCERT',
+    'FAN_SIGN',
+    'FAN_MEETING',
+    'SEASON_GREETING',
+    'BENEFIT',
+    'MD',
+    'COLLAB',
+    'ETC',
+  ];
+
+  const getRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+  const allOwnerships = await prisma.cardOwnership.findMany({
+    where: { status: 'IN_GALLERY' },
+    select: { id: true, purchasePrice: true, cardId: true, ownerId: true },
+  });
+
+  const selectedOwnerships = allOwnerships
+    .sort(() => 0.5 - Math.random())
+    .slice(0, 150);
+
+  for (const ownership of selectedOwnerships) {
+    const transactionData = {
+      sellerId: ownership.ownerId,
+      cardId: ownership.cardId,
+      ownershipIds: [ownership.id], // 1장씩 판매하는 경우
+      price: Math.floor(ownership.purchasePrice * 1.2),
+      exchangeGrade: getRandom(grades), // 시딩 시 기본값 설정
+      exchangeGenre: getRandom(genres),
+      exchangeDescription: '교환 환영합니다! 편하게 연락주세요.',
+    };
+
+    await transactionRepository.saveTransaction(transactionData);
+  }
 
   console.log('시드 데이터 입력 완료!');
 }
