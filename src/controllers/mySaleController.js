@@ -7,6 +7,7 @@ const mySaleController = express.Router();
 mySaleController.get('/', verifyAccessToken, async (req, res) => {
   try {
     const sellerId = req.auth.userId;
+    console.log(req.auth);
 
     const page = Math.max(1, Number(req.query.page) || 1);
     const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 15));

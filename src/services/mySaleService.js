@@ -60,6 +60,10 @@ export const getMySales = async ({
 
   const allSales = await findMySales({ where });
 
+  console.log('sellerId:', sellerId);
+  console.log('where:', where);
+  console.log('allSalesCount:', allSales.length);
+
   const sales = await findMySales({ where, skip, take: limit });
 
   const mappedSales = sales.map((sale) => {
