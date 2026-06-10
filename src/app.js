@@ -40,10 +40,7 @@ app.use('/market', detailController);
 
 // 마이갤러리
 app.use('/gallery', galleryController);
-<<<<<<< HEAD
-=======
 
->>>>>>> dev
 // 나의 판매 포토카드
 app.use('/my-sales', mySaleController);
 
