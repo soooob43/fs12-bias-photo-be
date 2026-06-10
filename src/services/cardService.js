@@ -26,7 +26,7 @@ const generateUploadSignature = () => {
     포토 카드 생성 - 최혜성
  -------------------------*/
 const createCard = async (creatorId, cardData) => {
-  const { minimumPrice, totalQuantity, ...rest } = cardData;
+  const { minimumPrice, totalQuantity, imagePublicId, ...rest } = cardData;
 
   const newCardData = {
     ...rest,
@@ -35,7 +35,20 @@ const createCard = async (creatorId, cardData) => {
     totalQuantity: Number(totalQuantity),
   };
 
-  return await cardRepository.createCard(newCardData);
+  // DB 저장 실패 시, cloudinary 서버에 이미지가 쌓이는 것을 방지
+  try {
+    const newCard = await cardRepository.createCard(newCardData);
+    return newCard;
+  } catch (error) {
+    if (imagePublicId) {
+      try {
+        await cloudinary.uploader.destroy(imagePublicId);
+      } catch (cloudinaryError) {
+        console.error('클라우디너리 이미지 삭제 실패:', cloudinaryError);
+      }
+    }
+    throw error;
+  }
 };
 
 const cardService = { generateUploadSignature, createCard };
