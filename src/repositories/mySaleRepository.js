@@ -1,12 +1,10 @@
 import prisma from '../config/prisma.js';
 
-export const findMySales = async ({ sellerId }) => {
+export const findMySales = async ({ where, skip, take }) => {
   return prisma.transaction.findMany({
-    where: {
-      sellerId,
-      isDeleted: false,
-    },
-
+    where,
+    skip,
+    take,
     include: {
       card: {
         include: {
@@ -29,4 +27,8 @@ export const findMySales = async ({ sellerId }) => {
       createdAt: 'desc',
     },
   });
+};
+
+export const countMySales = async (where) => {
+  return prisma.transaction.count({ where });
 };
