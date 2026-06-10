@@ -8,7 +8,11 @@ import { notFoundHandler } from './middlewares/notFoundHandler.js';
 import authController from './controllers/authController.js';
 import transactionController from './controllers/transactionController.js';
 import userController from './controllers/userController.js';
+<<<<<<< HEAD
+import detailController from './controllers/detailController.js';
+=======
 import detailController from './controllers/DetailController.js';
+>>>>>>> dev
 import mySaleController from './controllers/mySaleController.js';
 import passport from 'passport';
 import './config/passport.js';
@@ -40,7 +44,10 @@ app.use('/market', detailController);
 
 // 마이갤러리
 app.use('/gallery', galleryController);
+<<<<<<< HEAD
+=======
 
+>>>>>>> dev
 // 나의 판매 포토카드
 app.use('/my-sales', mySaleController);
 
