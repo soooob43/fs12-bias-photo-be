@@ -1,7 +1,7 @@
 import prisma from '../config/prisma.js';
 import AppError from '../utils/appError.js'; // 공통 에러 핸들러 추가
 
-//카드 상세 페이지 조회 API
+//카드 상세 페이지 관련 정보 조회 API
 const getMarketDetail = async (transactionId) => {
   return await prisma.transaction.findUnique({
     where: {
@@ -36,7 +36,7 @@ const getMarketDetail = async (transactionId) => {
   });
 };
 
-//포토카드 구매하기 API (다수테이블 변화가 발생하므로 1개 트랜잭션으로 일괄 처리)
+//구매자뷰 상세페이지 내 포토카드 구매하기 API (다수테이블 변경으로 1개 트랜잭션으로 원자성 보장)
 //Props (transactionId: 거래고유ID, buyerId: 구매희망자:ID, quantity: 구매희망수량)
 const purchasePhotocard = async ({ transactionId, buyerId, quantity }) => {
   return await prisma.$transaction(async (t) => {
@@ -61,7 +61,7 @@ const purchasePhotocard = async ({ transactionId, buyerId, quantity }) => {
       );
     }
 
-    //총 구매금액
+    //총 구매금액 (포인트 증감 시 사용)
     const totalPrice = transaction.price * quantity;
 
     //구매자 포인트 조회
@@ -95,13 +95,14 @@ const purchasePhotocard = async ({ transactionId, buyerId, quantity }) => {
     });
 
     // 카드 소유권 이전
+    //판매글 대상 카드이면서, 판매자 소유이면서, 판매중인 카드 중 구매수량만큼만 조회
     const ownershipsToTransfer = await t.cardOwnership.findMany({
       where: {
         transactionId: transaction.id,
         ownerId: transaction.sellerId,
         status: 'ON_SALE', // 판매하기 기능에서 판매중으로 전환된 카드 대상
       },
-      take: quantity, // 구매 수량만큼의 데이터만 랜덤 호출
+      take: quantity, // 예를 들어 2개 구매면 판매 카드 4장 중에 2장만큼만 로드
     });
 
     // 판매자 소유 판매중 데이터가 구매수량 보다 적은 경우
@@ -113,7 +114,7 @@ const purchasePhotocard = async ({ transactionId, buyerId, quantity }) => {
       );
     }
 
-    // 소유권 이전을 위한 id 추출
+    // 하단 소유권 이전 로직을 위해 소유권 전환 대상 객체에서 id 추출
     const ownershipIds = ownershipsToTransfer.map((item) => item.id);
 
     //ownershipIds에 포함된 모든 카드 소유권 변경
@@ -125,11 +126,11 @@ const purchasePhotocard = async ({ transactionId, buyerId, quantity }) => {
         ownerId: buyerId, // 소유자를 구매자로 변경!
         status: 'IN_GALLERY', // 상태를 다시 보유중으로 변경!
         purchasePrice: transaction.price, // 구매 시점의 실거래가로 갱신
-        transactionId: NULL,
+        transactionId: null, //판매중이지 않으므로 null 전환
       },
     });
 
-    // 판매카드 잔여수량 차감 및 신규 데이터 반환
+    // 판매카드 잔여수량 차감
     const updatedTransaction = await t.transaction.update({
       where: { id: Number(transactionId) },
       data: {
@@ -137,7 +138,7 @@ const purchasePhotocard = async ({ transactionId, buyerId, quantity }) => {
       },
     });
 
-    //판매히스토리 추가 및 반환(로그)
+    //판매히스토리 추가
     const history = await t.transactionHistory.create({
       data: {
         sellerId: transaction.sellerId,
@@ -147,12 +148,148 @@ const purchasePhotocard = async ({ transactionId, buyerId, quantity }) => {
         price: totalPrice,
       },
     });
-
+    // 리렌더링용 신규 데이터 반환 및 로그용 데이터 반환
     return { transaction: updatedTransaction, history };
+  });
+};
+
+//구매자뷰 상세페이지 내 포토카드 교환 요청 API (다수테이블 변경으로 1개 트랜잭션으로 원자성 보장)
+//Props (listingId: 거래고유ID, proposerId: 교환희망자ID, offeredCardId: 교환요청카드ID(cardOwnership 상의 ID), description: 교환내용설명)
+const createExchangeOffer = async ({
+  listingId,
+  proposerId,
+  offeredCardId,
+  description,
+}) => {
+  return await prisma.$transaction(async (t) => {
+    //대상 판매글 조회
+    const transaction = await t.transaction.findUnique({
+      where: { id: Number(listingId) },
+    });
+
+    if (!transaction || transaction.isDeleted) {
+      throw AppError(
+        404,
+        'TRANSACTION_NOT_FOUND',
+        '존재하지 않거나 삭제된 판매글에는 교환 제안을 할 수 없습니다.',
+      );
+    }
+
+    // 교환제안하는 카드의 정보 조회
+    const myCardOwnership = await t.cardOwnership.findUnique({
+      where: { id: Number(offeredCardId) },
+    });
+
+    //카드 소유자 정보 및 보유중인 상태 확인
+    if (
+      !myCardOwnership ||
+      myCardOwnership.ownerId !== proposerId ||
+      myCardOwnership.status !== 'IN_GALLERY'
+    ) {
+      throw AppError(
+        400,
+        'CARD_NOT_AVAILABLE',
+        '제시하신 카드가 없거나, 현재 교환 가능한 상태(보유중)가 아닙니다.',
+      );
+    }
+
+    //카드 소유 상태를 보유중(IN_GALLERY) -> 교환중(ON_EXCHANGE)으로 변경
+    await t.cardOwnership.update({
+      where: { id: Number(offeredCardId) },
+      data: {
+        status: 'ON_EXCHANGE',
+      },
+    });
+
+    //교환 제안 목록(ExchangeOffer) 테이블에 새로운 레코드 생성
+    const newOffer = await t.exchangeOffer.create({
+      data: {
+        listingId: Number(listingId),
+        proposerId: proposerId,
+        offeredCardId: Number(offeredCardId),
+        description: description || null,
+      },
+      include: {
+        proposer: {
+          select: { nickname: true },
+        },
+        offeredCard: {
+          include: { card: true },
+        },
+      },
+    });
+
+    return newOffer;
+  });
+};
+
+//판매자뷰 상세 페이지 하단 교환 제안 목록 조회 API
+const getExchangeOffer = async (transactionId) => {
+  return await prisma.exchangeOffer.findMany({
+    where: {
+      listingId: Number(transactionId), //해당 카드에 대한 교환 제안 목록
+      isDeleted: false, // 교환 취소되지 않은 카드
+    },
+    include: {
+      proposer: {
+        select: {
+          nickname: true, // 제안자 유저 닉네임
+        },
+      },
+      offeredCard: {
+        // 제안한 카드 소유권 정보
+        include: {
+          card: true, // 제안한 카드의 실제 이미지/도안 정보까지 묶어서 로드
+        },
+      },
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+};
+
+//판매자뷰 상세 페이지 내 판매내리기 API (2개 테이블 변경으로 1개 트랜잭션으로 원자성 보장)
+//거래 테이블 내 "isDeleted: true"로 변경 및 카드소유권 테이블 내 "status: ON_SALE -> status: IN_GALLERY"로 변경)
+const deleteCardTransaction = async (transactionId) => {
+  return await prisma.$transaction(async (t) => {
+    const transaction = await t.transaction.findUnique({
+      where: { id: Number(transactionId) },
+    });
+
+    if (!transaction) {
+      throw AppError(
+        404,
+        'TRANSACTION_NOT_FOUND',
+        '해당 판매 정보를 찾을 수 없습니다.',
+      );
+    }
+
+    // 판매글에 포함된 n개 카드에 대한 상태를 판매중->보유중 으로 변경
+    await t.cardOwnership.updateMany({
+      where: {
+        transactionId: transaction.id,
+        status: 'ON_SALE',
+      },
+      data: {
+        status: 'IN_GALLERY',
+      },
+    });
+
+    //판매글의 isDeleted 값을 true로 변경하여 판매글 안보이게 하기
+    return await t.transaction.update({
+      where: { id: Number(transactionId) },
+      data: {
+        isDeleted: true,
+      },
+    });
   });
 };
 
 export default {
   getMarketDetail,
   purchasePhotocard,
+  createExchangeOffer,
+  getExchangeOffer,
+  deleteCardTransaction,
 };
