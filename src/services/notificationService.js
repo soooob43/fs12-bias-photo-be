@@ -1,4 +1,5 @@
 import { NotificationType } from '@prisma/client';
+import AppError from '../utils/appError.js';
 
 import {
   findNotifications,
@@ -39,11 +40,15 @@ export const readNotification = async ({ notificationId, userId }) => {
   const notification = await findNotificationById(notificationId);
 
   if (!notification) {
-    throw new Error('존재하지 않는 알림입니다.');
+    throw AppError(404, 'NOTIFICATION_NOT_FOUND', '존재하지 않는 알림입니다.');
   }
 
   if (notification.userId !== userId) {
-    throw new Error('본인 알림만 읽을 수 있습니다.');
+    throw AppError(
+      403,
+      'NOTIFICATION_FORBIDDEN',
+      '본인 알림만 읽을 수 있습니다.',
+    );
   }
 
   if (notification.isRead) {
@@ -120,7 +125,7 @@ export const createTradeRejectedNotification = async ({
   cardGrade,
   cardTitle,
 }) => {
-  const message = `${sellerNickname}님이 [${cardGrade} | ${cardTitle}]의 포토카드 교환 제안을 거절했습니다.`;
+  const message = `${sellerNickname}님과의 [${cardGrade} | ${cardTitle}] 포토카드 교환이 무산되었습니다.`;
 
   return createNotification({
     userId: proposerId,
