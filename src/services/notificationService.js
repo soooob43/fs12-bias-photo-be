@@ -75,10 +75,7 @@ export const createPurchaseNotification = async ({
   cardTitle,
   quantity,
 }) => {
-  const message =
-    `${buyerNickname}님이 ` +
-    `[${cardGrade} | ${cardTitle}]을(를) ` +
-    `${quantity}장 구매했습니다.`;
+  const message = `${buyerNickname}님이 [${cardGrade} | ${cardTitle}]을(를) ${quantity}장 구매했습니다.`;
 
   return createNotification({
     userId: sellerId,
@@ -93,10 +90,7 @@ export const createTradeOfferNotification = async ({
   cardGrade,
   cardTitle,
 }) => {
-  const message =
-    `${proposerNickname}님이 ` +
-    `[${cardGrade} | ${cardTitle}]의 ` +
-    `포토카드 교환을 제안했습니다.`;
+  const message = `${proposerNickname}님이 [${cardGrade} | ${cardTitle}]의 포토카드 교환을 제안했습니다.`;
 
   return createNotification({
     userId: sellerId,
@@ -111,14 +105,26 @@ export const createTradeAcceptedNotification = async ({
   cardGrade,
   cardTitle,
 }) => {
-  const message =
-    `${sellerNickname}님과의 ` +
-    `[${cardGrade} | ${cardTitle}]의 ` +
-    `포토카드 교환이 성사되었습니다.`;
+  const message = `${sellerNickname}님과의 [${cardGrade} | ${cardTitle}] 포토카드 교환이 성사되었습니다.`;
 
   return createNotification({
     userId: proposerId,
     type: NotificationType.EXCHANGE_ACCEPTED,
+    message,
+  });
+};
+
+export const createTradeRejectedNotification = async ({
+  proposerId,
+  sellerNickname,
+  cardGrade,
+  cardTitle,
+}) => {
+  const message = `${sellerNickname}님이 [${cardGrade} | ${cardTitle}]의 포토카드 교환 제안을 거절했습니다.`;
+
+  return createNotification({
+    userId: proposerId,
+    type: NotificationType.EXCHANGE_REJECTED,
     message,
   });
 };
