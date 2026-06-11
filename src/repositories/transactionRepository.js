@@ -4,13 +4,47 @@ import prisma from '../config/prisma.js';
 /*---------------------------
 판매 또는 교환 중이 아닌 카드 조회 ( + 로그인 기준 )
   add : 2026.06.08 윤소정
+  fix : 2026.06.10 검색 정렬 추가
 ----------------------------*/
-const findAvailableCardOwnerships = async (ownerId) => {
+const findAvailableCardOwnerships = async (
+  ownerId,
+  { keyword, grade, genre } = {},
+) => {
+  const cardWhere = {};
+
+  if (keyword) {
+    cardWhere.OR = [
+      {
+        title: {
+          contains: keyword,
+          mode: 'insensitive',
+        },
+      },
+      {
+        description: {
+          contains: keyword,
+          mode: 'insensitive',
+        },
+      },
+    ];
+  }
+
+  if (grade) {
+    cardWhere.grade = grade;
+  }
+
+  if (genre) {
+    cardWhere.genre = genre;
+  }
+
   //CardOwnership 조회 => 각각 카드의 소유권 ID가 판매 등록 POST에서 필요해서
   return prisma.cardOwnership.findMany({
     where: {
       ownerId,
       status: OwnershipStatus.IN_GALLERY,
+      ...(Object.keys(cardWhere).length > 0 && {
+        card: cardWhere,
+      }),
     },
     orderBy: {
       createdAt: 'desc',
