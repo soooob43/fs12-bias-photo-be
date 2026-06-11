@@ -14,6 +14,7 @@ import notificationController from './controllers/notificationController.js';
 import passport from 'passport';
 import './config/passport.js';
 import galleryController from './controllers/galleryController.js';
+import cardController from './controllers/cardController.js';
 
 const app = express();
 
@@ -47,6 +48,9 @@ app.use('/my-sales', mySaleController);
 
 //알림
 app.use('/notifications', notificationController);
+
+// 포토 카드
+app.use('/cards', cardController);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
