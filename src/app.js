@@ -10,6 +10,7 @@ import transactionController from './controllers/transactionController.js';
 import userController from './controllers/userController.js';
 import detailController from './controllers/detailController.js';
 import mySaleController from './controllers/mySaleController.js';
+import notificationController from './controllers/notificationController.js';
 import passport from 'passport';
 import './config/passport.js';
 import galleryController from './controllers/galleryController.js';
@@ -44,6 +45,9 @@ app.use('/gallery', galleryController);
 
 // 나의 판매 포토카드
 app.use('/my-sales', mySaleController);
+
+//알림
+app.use('/notifications', notificationController);
 
 // 포토 카드
 app.use('/cards', cardController);
