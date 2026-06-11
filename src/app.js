@@ -13,6 +13,7 @@ import mySaleController from './controllers/mySaleController.js';
 import passport from 'passport';
 import './config/passport.js';
 import galleryController from './controllers/galleryController.js';
+import cardController from './controllers/cardController.js';
 
 const app = express();
 
@@ -43,6 +44,9 @@ app.use('/gallery', galleryController);
 
 // 나의 판매 포토카드
 app.use('/my-sales', mySaleController);
+
+// 포토 카드
+app.use('/cards', cardController);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
