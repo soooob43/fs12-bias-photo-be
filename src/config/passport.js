@@ -27,9 +27,10 @@ passport.use(
           }
         } else {
           user = await authRepository.createUser({
-            email: email,
+            email,
             nickname: profile.displayName,
             provider: 'GOOGLE',
+            providerId: profile.id,
           });
         }
 
