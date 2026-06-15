@@ -1,3 +1,4 @@
+import dayjs from '../config/dayjs.js';
 import cloudinary from '../config/cloudinary.js';
 import cardRepository from '../repositories/cardRepository.js';
 
@@ -22,11 +23,30 @@ const generateUploadSignature = () => {
   };
 };
 
+// 포토 카드 월 제한 수
+export const CREATE_LIMIT_PER_MONTH = 3;
+
 /*-------------------------
     포토 카드 생성 - 최혜성
  -------------------------*/
 const createCard = async (creatorId, cardData) => {
   const { minimumPrice, totalQuantity, imagePublicId, ...rest } = cardData;
+
+  const now = dayjs();
+
+  const startOfMonth = now.startOf('month').toDate();
+  const startOfNextMonth = now.add(1, 'month').startOf('month').toDate();
+
+  const currentMonthCount = await cardRepository.countCardsByMonth(
+    creatorId,
+    startOfMonth,
+    startOfNextMonth,
+  );
+
+  // 이번 달 포토 카드 생성 제한 검사
+  if (currentMonthCount >= CREATE_LIMIT_PER_MONTH) {
+    throw new AppError(403, '이번 달 포토카드 생성 한도를 초과했습니다.');
+  }
 
   const newCardData = {
     ...rest,
@@ -51,6 +71,36 @@ const createCard = async (creatorId, cardData) => {
   }
 };
 
-const cardService = { generateUploadSignature, createCard };
+/*----------------------------------------
+    포토 카드 생성 남은 횟수 조회 - 최혜성
+ -----------------------------------------*/
+const getRemainingCreateCount = async (userId) => {
+  const now = dayjs();
+  const startOfMonth = now.startOf('month').toDate();
+  const startOfNextMonth = now.add(1, 'month').startOf('month').toDate();
+
+  const currentMonthCount = await cardRepository.countCardsByMonth(
+    userId,
+    startOfMonth,
+    startOfNextMonth,
+  );
+
+  const remainingCount = Math.max(
+    0,
+    CREATE_LIMIT_PER_MONTH - currentMonthCount,
+  );
+
+  return {
+    totalLimit: CREATE_LIMIT_PER_MONTH,
+    currentCount: currentMonthCount,
+    remainingCount: remainingCount,
+  };
+};
+
+const cardService = {
+  generateUploadSignature,
+  createCard,
+  getRemainingCreateCount,
+};
 
 export default cardService;

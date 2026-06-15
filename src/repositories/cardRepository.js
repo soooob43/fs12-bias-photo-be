@@ -24,8 +24,22 @@ const createCard = async (cardData) => {
   return newCard;
 };
 
+// 월별 포토 카드 생성 횟수 조회
+const countCardsByMonth = async (userId, startDate, endDate) => {
+  return await prisma.card.count({
+    where: {
+      creatorId: userId,
+      createdAt: {
+        gte: startDate,
+        lte: endDate,
+      },
+    },
+  });
+};
+
 const cardRepository = {
   createCard,
+  countCardsByMonth,
 };
 
 export default cardRepository;

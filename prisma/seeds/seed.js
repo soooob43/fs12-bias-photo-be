@@ -20,6 +20,11 @@ async function main() {
   //   data: 데이터 ,
   // });
 
+  await prisma.userPoint.update({
+    where: { userId: 'f91a1f7d-d718-4476-a92e-90d00132ee39' },
+    data: { balance: 10000 },
+  });
+
   // 포토 카드 생성 시드 데이터
 
   // const cardTemplate = await prisma.card.createMany({
@@ -49,43 +54,43 @@ async function main() {
   //   ],
   // });
 
-  const grades = ['COMMON', 'RARE', 'SUPER_RARE', 'LEGENDARY'];
-  const genres = [
-    'ALBUM',
-    'CONCERT',
-    'FAN_SIGN',
-    'FAN_MEETING',
-    'SEASON_GREETING',
-    'BENEFIT',
-    'MD',
-    'COLLAB',
-    'ETC',
-  ];
+  // const grades = ['COMMON', 'RARE', 'SUPER_RARE', 'LEGENDARY'];
+  // const genres = [
+  //   'ALBUM',
+  //   'CONCERT',
+  //   'FAN_SIGN',
+  //   'FAN_MEETING',
+  //   'SEASON_GREETING',
+  //   'BENEFIT',
+  //   'MD',
+  //   'COLLAB',
+  //   'ETC',
+  // ];
 
-  const getRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  // const getRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
-  const allOwnerships = await prisma.cardOwnership.findMany({
-    where: { status: 'IN_GALLERY' },
-    select: { id: true, purchasePrice: true, cardId: true, ownerId: true },
-  });
+  // const allOwnerships = await prisma.cardOwnership.findMany({
+  //   where: { status: 'IN_GALLERY' },
+  //   select: { id: true, purchasePrice: true, cardId: true, ownerId: true },
+  // });
 
-  const selectedOwnerships = allOwnerships
-    .sort(() => 0.5 - Math.random())
-    .slice(0, 150);
+  // const selectedOwnerships = allOwnerships
+  //   .sort(() => 0.5 - Math.random())
+  //   .slice(0, 150);
 
-  for (const ownership of selectedOwnerships) {
-    const transactionData = {
-      sellerId: ownership.ownerId,
-      cardId: ownership.cardId,
-      ownershipIds: [ownership.id], // 1장씩 판매하는 경우
-      price: Math.floor(ownership.purchasePrice * 1.2),
-      exchangeGrade: getRandom(grades), // 시딩 시 기본값 설정
-      exchangeGenre: getRandom(genres),
-      exchangeDescription: '교환 환영합니다! 편하게 연락주세요.',
-    };
+  // for (const ownership of selectedOwnerships) {
+  //   const transactionData = {
+  //     sellerId: ownership.ownerId,
+  //     cardId: ownership.cardId,
+  //     ownershipIds: [ownership.id], // 1장씩 판매하는 경우
+  //     price: Math.floor(ownership.purchasePrice * 1.2),
+  //     exchangeGrade: getRandom(grades), // 시딩 시 기본값 설정
+  //     exchangeGenre: getRandom(genres),
+  //     exchangeDescription: '교환 환영합니다! 편하게 연락주세요.',
+  //   };
 
-    await transactionRepository.saveTransaction(transactionData);
-  }
+  //   await transactionRepository.saveTransaction(transactionData);
+  // }
 
   console.log('시드 데이터 입력 완료!');
 }

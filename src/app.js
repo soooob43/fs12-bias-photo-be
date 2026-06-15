@@ -34,6 +34,9 @@ app.use('/auth', authController);
 
 app.use('/users', userController);
 
+// 포토 카드
+app.use('/cards', cardController);
+
 // 포토 카드 거래(매매)
 app.use('/transactions', transactionController);
 
@@ -48,9 +51,6 @@ app.use('/my-sales', mySaleController);
 
 //알림
 app.use('/notifications', notificationController);
-
-// 포토 카드
-app.use('/cards', cardController);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
