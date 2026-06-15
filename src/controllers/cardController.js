@@ -43,4 +43,26 @@ cardController.post(
   },
 );
 
+/*----------------------------------
+  포토 카드 생성 횟수 조회 - 최혜성
+-----------------------------------*/
+cardController.get(
+  '/remaining-count',
+  verifyAccessToken,
+  async (req, res, next) => {
+    try {
+      const userId = req.auth.userId;
+
+      const result = await cardService.getRemainingCreateCount(userId);
+
+      res.status(201).json({
+        message: '남은 포토카드 생성 횟수를 성공적으로 조회했습니다.',
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
 export default cardController;
