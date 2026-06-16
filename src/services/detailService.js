@@ -3,6 +3,14 @@ import AppError from '../utils/appError.js'; // 공통 에러 핸들러 추가
 
 //카드 정보 조회
 const getPhotocard = async (transactionId) => {
+  // transactionId가 숫자가 아닐 경우
+  if (isNaN(Number(transactionId))) {
+    throw AppError(
+      400,
+      'INVALID_ID_FORMAT',
+      '잘못된 요청입니다. 올바른 포토카드 판매 번호를 입력해주세요.',
+    );
+  }
   const transaction = await detailRepository.getMarketDetail(transactionId);
 
   //해당 ID 포토카드 판매 정보가 없는 경우
