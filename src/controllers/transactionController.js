@@ -1,7 +1,10 @@
 import express from 'express';
 import transactionService from '../services/transactionService.js';
 import validate from '../middlewares/validate.js';
-import { transactionSchema } from '../schemas/transaction.schema.js';
+import {
+  transactionSchema,
+  updateTransactionSchema,
+} from '../schemas/transaction.schema.js';
 import { verifyAccessToken } from '../middlewares/auth.js';
 
 const transactionController = express.Router();
@@ -56,6 +59,36 @@ transactionController.post(
       return res.status(201).json({
         message: '포토 카드 판매 등록이 완료되었습니다.',
         data: newTransaction,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+/*---------------------------
+ 판매 등록했던 포토카드 수정하기
+  add : 2026.06.08 윤소정
+  fix : 2026.06.10 검색 및 정렬 추가
+----------------------------*/
+transactionController.patch(
+  '/:transactionId',
+  verifyAccessToken,
+  validate(updateTransactionSchema),
+  async (req, res, next) => {
+    try {
+      const { transactionId } = req.params;
+      const sellerId = req.auth.userId;
+      const transactionData = req.validatedData;
+
+      const updatedTransaction = await transactionService.updateTransaction(
+        sellerId,
+        transactionId,
+        transactionData,
+      );
+      return res.status(200).json({
+        message: '판매글 수정이 완료되었습니다.',
+        data: updatedTransaction,
       });
     } catch (error) {
       next(error);
