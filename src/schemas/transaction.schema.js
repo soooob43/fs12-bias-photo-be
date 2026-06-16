@@ -15,3 +15,15 @@ export const transactionSchema = z.object({
   }),
   exchangeDescription: z.string().optional(),
 });
+
+export const updateTransactionSchema = z
+  .object({
+    price: z.number().int().min(1).optional(),
+    totalQuantity: z.number().int().min(1).optional(),
+    exchangeGrade: z.nativeEnum(CardGrade).optional(),
+    exchangeGenre: z.nativeEnum(CardGenre).optional(),
+    exchangeDescription: z.string().optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: '수정할 내용을 입력해 주세요.',
+  });
