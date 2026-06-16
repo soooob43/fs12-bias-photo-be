@@ -208,6 +208,59 @@ const countTransactionsBySaleStatus = async (status) => {
   });
 };
 
+/*---------------------------
+  수정하기 모달 
+  add : 2026.06.16 윤소정
+----------------------------*/
+const findTransactionById = async (transactionId) => {
+  return await prisma.transaction.findUnique({
+    where: { id: Number(transactionId) },
+    include: {
+      ownerships: {
+        where: {
+          status: OwnershipStatus.ON_SALE,
+        },
+        orderBy: {
+          id: 'desc',
+        },
+      },
+    },
+  });
+};
+
+const updateTransaction = async (transactionId, data) => {
+  const updateData = {
+    price: data.price,
+    totalQuantity: data.totalQuantity,
+    remainingQuantity: data.remainingQuantity,
+    exchangeGrade: data.exchangeGrade,
+    exchangeGenre: data.exchangeGenre,
+    exchangeDescription: data.exchangeDescription,
+  };
+
+  Object.keys(updateData).forEach((key) => {
+    if (updateData[key] === undefined) {
+      delete updateData[key];
+    }
+  });
+
+  return await prisma.transaction.update({
+    where: { id: Number(transactionId) },
+    data: updateData,
+  });
+};
+
+const releaseSaleOwnerships = async (ownershipIds) => {
+  return await prisma.cardOwnership.updateMany({
+    where: {
+      id: { in: ownershipIds },
+    },
+    data: {
+      status: OwnershipStatus.IN_GALLERY,
+      transactionId: null,
+    },
+  });
+};
 /*--------------------------------------
   판매 포토 카드 내역 전체 개수 - 최혜성
 ---------------------------------------*/
@@ -224,6 +277,9 @@ const transactionRepository = {
   countTransactionsByGrade,
   countTransactionsBySaleStatus,
   countAllTransactions,
+  findTransactionById,
+  updateTransaction,
+  releaseSaleOwnerships,
 };
 
 export default transactionRepository;
