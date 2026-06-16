@@ -195,7 +195,7 @@ const createExchangeOffer = async ({
 
     //카드 소유 상태를 보유중(IN_GALLERY) -> 교환중(ON_EXCHANGE)으로 변경
     await t.cardOwnership.update({
-      where: { id: Number(offeredCardId) },
+      where: { id: Number(offeredCardId), status: 'IN_GALLERY' },
       data: {
         status: 'ON_EXCHANGE',
       },
@@ -249,6 +249,58 @@ const getExchangeOffer = async (transactionId) => {
   });
 };
 
+//판매자뷰 상세 페이지 내 교환 거절 및 구매자페이지 내 교환 취소하기 API (2개 테이블 변경으로 1개 트랜잭션으로 원자성 보장)
+//교환제안목록 테이블 내 "isDeleted: true"로 변경 및 카드소유권 테이블 내 "status: ON_EXCHANGE -> status: IN_GALLERY"로 변경)
+const deleteExchange = async (exchangeOfferId) => {
+  return await prisma.$transaction(async (t) => {
+    const exchangeOffer = await t.exchangeOffer.findUnique({
+      where: { id: Number(exchangeOfferId) },
+      include: {
+        offeredCard: true,
+      },
+    });
+
+    if (!exchangeOffer) {
+      throw AppError(
+        404,
+        'OFFER_NOT_FOUND',
+        '해당 교환 제안을 찾을 수 없습니다.',
+      );
+    }
+
+    if (
+      !exchangeOffer.offeredCard ||
+      exchangeOffer.offeredCard.status !== 'ON_EXCHANGE'
+    ) {
+      throw AppError(
+        400,
+        'INVALID_STATUS',
+        '교환 제시 중인 카드만 취소/거절할 수 있습니다.',
+      );
+    }
+
+    //교환 제안한 카드에 대한 상태를 교환중->보유중 으로 변경
+    await t.cardOwnership.update({
+      where: {
+        id: exchangeOffer.offeredCardId,
+      },
+      data: {
+        status: 'IN_GALLERY',
+      },
+    });
+
+    //교환제안의 isDeleted 값을 true로 변경하여 교환제안카드 안보이게 하기
+    await t.exchangeOffer.update({
+      where: {
+        id: exchangeOffer.id,
+      },
+      data: {
+        isDeleted: true,
+      },
+    });
+  });
+};
+
 //판매자뷰 상세 페이지 내 판매내리기 API (2개 테이블 변경으로 1개 트랜잭션으로 원자성 보장)
 //거래 테이블 내 "isDeleted: true"로 변경 및 카드소유권 테이블 내 "status: ON_SALE -> status: IN_GALLERY"로 변경)
 const deleteCardTransaction = async (transactionId) => {
@@ -291,5 +343,6 @@ export default {
   purchasePhotocard,
   createExchangeOffer,
   getExchangeOffer,
+  deleteExchange,
   deleteCardTransaction,
 };

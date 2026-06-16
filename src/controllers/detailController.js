@@ -68,6 +68,19 @@ router.get('/:transactionId/exchange', async (req, res, next) => {
   }
 });
 
+//교환제안 내리기 (실제 DB 작업은 update지만 delete로 표현)
+router.delete('/exchange/:exchangeOfferId', async (req, res, next) => {
+  try {
+    const { exchangeOfferId } = req.params;
+    await detailService.deleteExchange(exchangeOfferId);
+    return res.status(200).json({
+      message: '해당 교환 제안이 성공적으로 취소/거절되었습니다.',
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 //판매글 내리기 (실제 DB 작업은 update지만 delete로 표현)
 router.delete('/:transactionId', async (req, res, next) => {
   try {
