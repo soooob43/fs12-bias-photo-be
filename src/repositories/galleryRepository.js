@@ -42,7 +42,7 @@ const findGalleryOwnerships = async (ownerId) => {
       },
     },
     orderBy: {
-      createdAt: 'desc',
+      updatedAt: 'desc',
     },
   });
 };

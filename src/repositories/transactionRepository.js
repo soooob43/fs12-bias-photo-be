@@ -47,7 +47,7 @@ const findAvailableCardOwnerships = async (
       }),
     },
     orderBy: {
-      createdAt: 'desc',
+      updatedAt: 'desc',
     },
     select: {
       id: true,
