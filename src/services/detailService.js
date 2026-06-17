@@ -90,6 +90,19 @@ const deleteCardTransaction = async (transactionId) => {
   return transaction;
 };
 
+//교환 수락하기
+const acceptExchangeOffer = async ({ exchangeOfferId, loginId }) => {
+  //파라미터 유효성 검증
+  if (!exchangeOfferId || !loginId) {
+    throw AppError(400, 'BAD_REQUEST', '요청 정보가 부족합니다.');
+  }
+
+  return await detailRepository.acceptExchangeOffer({
+    exchangeOfferId,
+    loginId,
+  });
+};
+
 export default {
   getPhotocard,
   purchasePhotocard,
@@ -97,4 +110,5 @@ export default {
   createExchangeOffer,
   deleteExchange,
   deleteCardTransaction,
+  acceptExchangeOffer,
 };

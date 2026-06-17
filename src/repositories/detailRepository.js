@@ -338,6 +338,103 @@ const deleteCardTransaction = async (transactionId) => {
   });
 };
 
+// 판매자뷰 상세 페이지 내 교환 제안 수락 API (다수 테이블 변경으로 원자성 보장)
+// Props (exchangeOfferId: 수락할 교환 제안 고유 ID, loginId: 로그인한 본인 ID)
+const acceptExchangeOffer = async ({ exchangeOfferId, loginId }) => {
+  return await prisma.$transaction(async (t) => {
+    // 교환 제안 조회 및 검증
+    const exchangeOffer = await t.exchangeOffer.findUnique({
+      where: { id: Number(exchangeOfferId) },
+      include: {
+        listing: true, // transaction 테이블
+      },
+    });
+
+    if (!exchangeOffer || exchangeOffer.isDeleted) {
+      throw AppError(
+        404,
+        'EXCHANGE_OFFER_NOT_FOUND',
+        '존재하지 않거나 이미 취소/삭제된 교환 제안입니다.',
+      );
+    }
+
+    const transaction = exchangeOffer.listing; // 교환 제안된 판매글 데이터
+
+    // 현재 로그인한 유저가 해당 판매글 판매자인지 확인
+    if (transaction.sellerId !== loginId) {
+      throw AppError(
+        403,
+        'UNAUTHORIZED_ACTION',
+        '본인의 판매글에 온 제안만 수락할 수 있습니다.',
+      );
+    }
+
+    // 교환 가능 여부 확인
+    if (transaction.remainingQuantity < 1) {
+      throw AppError(
+        400,
+        'MARKET_STOCK_SHORTAGE',
+        '교환 가능한 잔여 카드가 없습니다.',
+      );
+    }
+
+    // 교환 제안 온 대상 카드 소유권 이전
+    // 소유자: 제안자 -> 판매자(나), 상태: ON_EXCHANGE -> IN_GALLERY, transactionId: null
+    await t.cardOwnership.update({
+      where: { id: exchangeOffer.offeredCardId },
+      data: {
+        ownerId: transaction.sellerId, // 소유권을 판매자에게 이전
+        status: 'IN_GALLERY', // 다시 일반 보유중 상태로 변경
+        transactionId: null, // 거래글 종속 해제
+      },
+    });
+
+    // 내가 판매중인 카드 중 '1장만' 조회하여 소유권 이전
+    const sellerCardToTransfer = await t.cardOwnership.findFirst({
+      where: {
+        transactionId: transaction.id,
+        ownerId: transaction.sellerId,
+        status: 'ON_SALE',
+      },
+    });
+
+    if (!sellerCardToTransfer) {
+      throw AppError(
+        404,
+        'CARD_NOT_FOUND',
+        '이전할 수 있는 판매자의 카드 소유권 데이터가 부족합니다.',
+      );
+    }
+
+    // 내 카드 1장에 대한 소유권 변경
+    // 소유자: 판매자(나) -> 제안자, 상태: ON_SALE -> IN_GALLERY, transactionId: null
+    await t.cardOwnership.update({
+      where: { id: sellerCardToTransfer.id },
+      data: {
+        ownerId: exchangeOffer.proposerId, // 소유권을 제안자에게 이전
+        status: 'IN_GALLERY', // 다시 일반 보유중 상태로 변경
+        transactionId: null, // 거래글 종속 해제
+      },
+    });
+
+    // 판매카드 잔여수량 1장 차감
+    await t.transaction.update({
+      where: { id: transaction.id },
+      data: {
+        remainingQuantity: { decrement: 1 },
+      },
+    });
+
+    // 교환 제안 레코드의 isDeleted 필드를 true로 변경(교환제안 목록에서 안보이게 함)
+    return await t.exchangeOffer.update({
+      where: { id: exchangeOffer.id },
+      data: {
+        isDeleted: true,
+      },
+    });
+  });
+};
+
 export default {
   getMarketDetail,
   purchasePhotocard,
@@ -345,4 +442,5 @@ export default {
   getExchangeOffer,
   deleteExchange,
   deleteCardTransaction,
+  acceptExchangeOffer,
 };
