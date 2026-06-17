@@ -339,14 +339,14 @@ const deleteCardTransaction = async (transactionId) => {
 };
 
 // 판매자뷰 상세 페이지 내 교환 제안 수락 API (다수 테이블 변경으로 원자성 보장)
-// Props (exchangeOfferId: 수락할 교환 제안 고유 ID, sellerId: 로그인한 판매자 본인 ID)
-const acceptExchangeOffer = async ({ exchangeOfferId, sellerId }) => {
+// Props (exchangeOfferId: 수락할 교환 제안 고유 ID, loginId: 로그인한 본인 ID)
+const acceptExchangeOffer = async ({ exchangeOfferId, loginId }) => {
   return await prisma.$transaction(async (t) => {
-    // 1) 교환 제안 조회 및 존재 여부/삭제 여부 검증
+    // 교환 제안 조회 및 검증
     const exchangeOffer = await t.exchangeOffer.findUnique({
       where: { id: Number(exchangeOfferId) },
       include: {
-        listing: true, // 연관된 transaction(판매글) 정보 로드
+        listing: true, // transaction 테이블
       },
     });
 
@@ -358,10 +358,10 @@ const acceptExchangeOffer = async ({ exchangeOfferId, sellerId }) => {
       );
     }
 
-    const transaction = exchangeOffer.listing;
+    const transaction = exchangeOffer.listing; // 교환 제안된 판매글 데이터
 
-    // 추가 보안 검증: 현재 로그인한 유저가 실제 판매글의 주인(판매자)인지 확인
-    if (transaction.sellerId !== sellerId) {
+    // 현재 로그인한 유저가 해당 판매글 판매자인지 확인
+    if (transaction.sellerId !== loginId) {
       throw AppError(
         403,
         'UNAUTHORIZED_ACTION',
@@ -369,16 +369,16 @@ const acceptExchangeOffer = async ({ exchangeOfferId, sellerId }) => {
       );
     }
 
-    // 2) 내 카드(판매글) 남은 수량이 1장도 없으면 에러 반환
+    // 교환 가능 여부 확인
     if (transaction.remainingQuantity < 1) {
       throw AppError(
         400,
         'MARKET_STOCK_SHORTAGE',
-        '판매글의 잔여 수량이 부족하여 교환을 진행할 수 없습니다.',
+        '교환 가능한 잔여 카드가 없습니다.',
       );
     }
 
-    // 3) 제안받은 카드(제안자가 보낸 카드) 소유권 이전
+    // 교환 제안 온 대상 카드 소유권 이전
     // 소유자: 제안자 -> 판매자(나), 상태: ON_EXCHANGE -> IN_GALLERY, transactionId: null
     await t.cardOwnership.update({
       where: { id: exchangeOffer.offeredCardId },
@@ -389,7 +389,7 @@ const acceptExchangeOffer = async ({ exchangeOfferId, sellerId }) => {
       },
     });
 
-    // 4) 내가 판매중인 카드 중 '1장만' 조회 후 소유권 이전
+    // 내가 판매중인 카드 중 '1장만' 조회하여 소유권 이전
     const sellerCardToTransfer = await t.cardOwnership.findFirst({
       where: {
         transactionId: transaction.id,
@@ -400,7 +400,7 @@ const acceptExchangeOffer = async ({ exchangeOfferId, sellerId }) => {
 
     if (!sellerCardToTransfer) {
       throw AppError(
-        409,
+        404,
         'CARD_NOT_FOUND',
         '이전할 수 있는 판매자의 카드 소유권 데이터가 부족합니다.',
       );
@@ -417,7 +417,7 @@ const acceptExchangeOffer = async ({ exchangeOfferId, sellerId }) => {
       },
     });
 
-    // 5) 판매카드 잔여수량 1장 차감
+    // 판매카드 잔여수량 1장 차감
     await t.transaction.update({
       where: { id: transaction.id },
       data: {
@@ -425,7 +425,7 @@ const acceptExchangeOffer = async ({ exchangeOfferId, sellerId }) => {
       },
     });
 
-    // 6) 교환 제안 레코드의 isDeleted 필드를 true로 변경하여 종료 처리
+    // 교환 제안 레코드의 isDeleted 필드를 true로 변경(교환제안 목록에서 안보이게 함)
     return await t.exchangeOffer.update({
       where: { id: exchangeOffer.id },
       data: {

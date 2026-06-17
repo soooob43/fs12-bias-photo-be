@@ -103,4 +103,26 @@ router.delete('/:transactionId', verifyAccessToken, async (req, res, next) => {
   }
 });
 
+//교환 요청 수락하기
+router.patch(
+  '/:transactionId/exchange',
+  verifyAccessToken,
+  async (req, res, next) => {
+    try {
+      const { exchangeOfferId, loginId } = req.body;
+      const result = await detailService.acceptExchangeOffer(
+        exchangeOfferId,
+        loginId,
+      );
+
+      return res.status(200).json({
+        message: '해당 교환 요청이 성공적으로 수락되었습니다.',
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
 export default router;
