@@ -10,6 +10,17 @@ const signup = async (signupData) => {
     throw AppError(409, 'EMAIL_ALREADY_EXISTS', '이미 가입된 이메일입니다.');
   }
 
+  const existingNickname = await authRepository.findByNickname(
+    signupData.nickname,
+  );
+  if (existingNickname) {
+    throw AppError(
+      409,
+      'NICKNAME_ALREADY_EXISTS',
+      '중복된 닉네임이 존재합니다.',
+    );
+  }
+
   const hashedPassword = await hashPassword(signupData.password);
   const user = await authRepository.createUser({
     email: signupData.email,
@@ -56,7 +67,7 @@ const refresh = async (userId, refreshToken) => {
   const user = await authRepository.findById(userId);
 
   if (!user || user.refreshToken !== refreshToken) {
-    throw new AppError(401, 'INVALID_TOKEN', '유효하지 않은 토큰입니다.');
+    throw AppError(401, 'INVALID_TOKEN', '유효하지 않은 토큰입니다.');
   }
 
   const newAccessToken = generateAccessToken({ userId });

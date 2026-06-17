@@ -15,12 +15,13 @@ import passport from 'passport';
 import './config/passport.js';
 import galleryController from './controllers/galleryController.js';
 import cardController from './controllers/cardController.js';
+import pointsController from './controllers/pointsController.js';
 
 const app = express();
 
 app.use(
   cors({
-    origin: env.clientUrl,
+    origin: [env.clientUrl, env.localUrl],
     credentials: true,
   }),
 );
@@ -51,6 +52,9 @@ app.use('/my-sales', mySaleController);
 
 //알림
 app.use('/notifications', notificationController);
+
+//포인트
+app.use('/points', pointsController);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
