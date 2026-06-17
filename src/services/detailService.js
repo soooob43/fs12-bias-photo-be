@@ -63,6 +63,18 @@ const getExchangeOffer = async (transactionId) => {
   return transaction;
 };
 
+const deleteExchange = async (exchangeOfferId) => {
+  if (!exchangeOfferId) {
+    throw AppError(
+      404,
+      'TRANSACTION_NOT_FOUND',
+      '교환 제안된 대상 정보를 찾을 수 없습니다.',
+      ㄴ,
+    );
+  }
+  return await detailRepository.deleteExchange(exchangeOfferId);
+};
+
 //판매글 내리기 (삭제)
 const deleteCardTransaction = async (transactionId) => {
   const transaction =
@@ -72,10 +84,23 @@ const deleteCardTransaction = async (transactionId) => {
     throw AppError(
       404,
       'TRANSACTION_NOT_FOUND',
-      '해당 포토카드의 교환 제안 정보를 찾을 수 없습니다.',
+      '해당 포토카드의 판매 정보를 찾을 수 없습니다.',
     );
   }
   return transaction;
+};
+
+//교환 수락하기
+const acceptExchangeOffer = async ({ exchangeOfferId, loginId }) => {
+  //파라미터 유효성 검증
+  if (!exchangeOfferId || !loginId) {
+    throw AppError(400, 'BAD_REQUEST', '요청 정보가 부족합니다.');
+  }
+
+  return await detailRepository.acceptExchangeOffer({
+    exchangeOfferId,
+    loginId,
+  });
 };
 
 export default {
@@ -83,5 +108,7 @@ export default {
   purchasePhotocard,
   getExchangeOffer,
   createExchangeOffer,
+  deleteExchange,
   deleteCardTransaction,
+  acceptExchangeOffer,
 };
