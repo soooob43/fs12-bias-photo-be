@@ -13,7 +13,7 @@ export const transactionSchema = z.object({
   exchangeGenre: z.nativeEnum(CardGenre, {
     errorMap: () => ({ message: '유효하지 않은 카드 장르입니다.' }),
   }),
-  exchangeDescription: z.string().optional(),
+  exchangeDescription: z.string().max(300).optional(),
 });
 
 export const updateTransactionSchema = z
@@ -22,7 +22,7 @@ export const updateTransactionSchema = z
     totalQuantity: z.number().int().min(1).optional(),
     exchangeGrade: z.nativeEnum(CardGrade).optional(),
     exchangeGenre: z.nativeEnum(CardGenre).optional(),
-    exchangeDescription: z.string().optional(),
+    exchangeDescription: z.string().max(300).optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: '수정할 내용을 입력해 주세요.',
