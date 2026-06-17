@@ -1,5 +1,6 @@
 import { NotificationType } from '@prisma/client';
 import AppError from '../utils/appError.js';
+import { sendSseNotification } from '../utils/sseManager.js';
 
 import {
   findNotifications,
@@ -65,12 +66,20 @@ export const readNotifications = async ({ notificationIds, userId }) => {
   });
 };
 
-export const createNotification = async ({ userId, type, message }) => {
-  return createNotificationRepository({
+export const createNotification = async ({
+  userId,
+  type,
+  message,
+}) => {
+  const notification = await createNotificationRepository({
     userId,
     type,
     message,
   });
+
+  sendSseNotification(userId, notification);
+
+  return notification;
 };
 
 export const createPurchaseNotification = async ({

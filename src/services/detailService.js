@@ -1,5 +1,10 @@
 import detailRepository from '../repositories/detailRepository.js';
 import AppError from '../utils/appError.js'; // 공통 에러 핸들러 추가
+import {
+  createPurchaseNotification,
+  createSoldOutNotification,
+  createTradeOfferNotification,
+} from './notificationService.js';
 
 //카드 정보 조회
 const getPhotocard = async (transactionId) => {
@@ -41,12 +46,23 @@ const createExchangeOffer = async ({
   if (!transactionId || !offeredCardId || !proposerId) {
     throw AppError(400, 'BAD_REQUEST', '요청 정보가 부족합니다.');
   }
-  return await detailRepository.createExchangeOffer({
+  const result = await detailRepository.createExchangeOffer({
     listingId: transactionId,
     proposerId,
     offeredCardId,
     description,
   });
+  console.log(result);
+  console.log('알림 생성 시작');
+
+  await createTradeOfferNotification({
+    sellerId: result.saleInfo.sellerId,
+    proposerNickname: result.proposer.nickname,
+    cardGrade: result.saleInfo.card.grade,
+    cardTitle: result.saleInfo.card.title,
+  });
+
+  return result;
 };
 
 //교환 제안 목록 조회
