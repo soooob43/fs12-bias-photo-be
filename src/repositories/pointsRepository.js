@@ -1,5 +1,5 @@
 import { PointHistoryType } from '@prisma/client';
-import prisma from '../config/prisma';
+import prisma from '../config/prisma.js';
 
 const findLatestRandomBoxByUserId = async (userId) => {
   return await prisma.randomBox.findFirst({

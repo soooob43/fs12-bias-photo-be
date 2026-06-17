@@ -1,6 +1,6 @@
 import express from 'express';
-import { verifyAccessToken } from '../middlewares/auth';
-import pointsService from '../services/pointsService';
+import { verifyAccessToken } from '../middlewares/auth.js';
+import pointsService from '../services/pointsService.js';
 
 const pointsController = express.Router();
 

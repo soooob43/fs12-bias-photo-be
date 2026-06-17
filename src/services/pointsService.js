@@ -1,6 +1,5 @@
-import authRepository from '../repositories/authRepository';
-import pointsRepository from '../repositories/pointsRepository';
-import AppError from '../utils/appError';
+import pointsRepository from '../repositories/pointsRepository.js';
+import AppError from '../utils/appError.js';
 
 const ONE_HOUR = 60 * 60 * 1000;
 
