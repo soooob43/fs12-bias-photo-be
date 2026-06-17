@@ -290,7 +290,7 @@ const deleteExchange = async (exchangeOfferId) => {
     });
 
     //교환제안의 isDeleted 값을 true로 변경하여 교환제안카드 안보이게 하기
-    await t.exchangeOffer.update({
+    return await t.exchangeOffer.update({
       where: {
         id: exchangeOffer.id,
       },
