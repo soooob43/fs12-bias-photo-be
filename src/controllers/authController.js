@@ -26,6 +26,9 @@ authController.post(
 
 authController.post('/login', validate(loginSchema), async (req, res, next) => {
   try {
+    console.log('NODE_ENV:', process.env.NODE_ENV);
+    console.log('isProduction:', isProduction);
+
     const result = await authService.login(req.validatedData);
     res.cookie('refreshToken', result.refreshToken, {
       httpOnly: true,
