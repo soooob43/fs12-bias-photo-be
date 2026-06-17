@@ -1,6 +1,7 @@
 import dayjs from '../config/dayjs.js';
 import cloudinary from '../config/cloudinary.js';
 import cardRepository from '../repositories/cardRepository.js';
+import AppError from '../utils/appError.js';
 
 /*----------------------------------------------
   Cloudinary 업로드용 서명(Signature) 발급 - 최혜성
@@ -45,7 +46,7 @@ const createCard = async (creatorId, cardData) => {
 
   // 이번 달 포토 카드 생성 제한 검사
   if (currentMonthCount >= CREATE_LIMIT_PER_MONTH) {
-    throw new AppError(403, '이번 달 포토카드 생성 한도를 초과했습니다.');
+    throw AppError(403, '이번 달 포토카드 생성 한도를 초과했습니다.');
   }
 
   const newCardData = {
@@ -61,11 +62,12 @@ const createCard = async (creatorId, cardData) => {
     return newCard;
   } catch (error) {
     if (imagePublicId) {
-      try {
-        await cloudinary.uploader.destroy(imagePublicId);
-      } catch (cloudinaryError) {
-        console.error('클라우디너리 이미지 삭제 실패:', cloudinaryError);
-      }
+      cloudinary.uploader.destroy(imagePublicId).catch((cloudinaryError) => {
+        console.error(
+          '클라우디너리 백그라운드 이미지 삭제 실패:',
+          cloudinaryError,
+        );
+      });
     }
     throw error;
   }

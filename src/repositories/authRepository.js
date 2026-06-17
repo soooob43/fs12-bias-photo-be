@@ -6,6 +6,12 @@ const findByEmail = async (email) => {
   });
 };
 
+const findByNickname = async (nickname) => {
+  return await prisma.user.findUnique({
+    where: { nickname },
+  });
+};
+
 const findById = async (id) => {
   return await prisma.user.findUnique({
     where: { id },
@@ -41,6 +47,7 @@ const updateUser = async (id, data) => {
 
 const authRepository = {
   findByEmail,
+  findByNickname,
   findById,
   createUser,
   updateUser,
