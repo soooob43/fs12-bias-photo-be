@@ -3,6 +3,7 @@ import AppError from '../utils/appError.js'; // 공통 에러 핸들러 추가
 
 //카드 정보 조회
 const getPhotocard = async (transactionId) => {
+  console.log('2', transactionId);
   const transaction = await detailRepository.getMarketDetail(transactionId);
 
   //해당 ID 포토카드 판매 정보가 없는 경우
@@ -11,6 +12,15 @@ const getPhotocard = async (transactionId) => {
       404,
       'TRANSACTION_NOT_FOUND',
       '해당 포토카드의 판매 정보를 찾을 수 없습니다.',
+    );
+  }
+
+  // 해당 판매 정보가 삭제되었을 경우
+  if (transaction.isDeleted) {
+    throw AppError(
+      410,
+      'TRANSACTION_DELETED',
+      '해당 포토카드의 판매 정보가 삭제되었습니다.',
     );
   }
 

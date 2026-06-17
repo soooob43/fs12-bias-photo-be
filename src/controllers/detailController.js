@@ -1,12 +1,17 @@
 import express from 'express';
 import detailService from '../services/detailService.js';
 import { verifyAccessToken } from '../middlewares/auth.js';
+import AppError from '../utils/appError.js';
 
 const router = express.Router();
 
 router.get('/:transactionId', async (req, res, next) => {
   try {
     const { transactionId } = req.params;
+
+    if (!transactionId || isNaN(Number(transactionId))) {
+      throw AppError(400, 'INVALID_TRANSACTION_ID', '유효하지 않은 ID입니다.');
+    }
 
     const data = await detailService.getPhotocard(transactionId);
 
