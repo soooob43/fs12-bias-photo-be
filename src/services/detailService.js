@@ -4,6 +4,8 @@ import {
   createPurchaseNotification,
   createSoldOutNotification,
   createTradeOfferNotification,
+  createTradeAcceptedNotification,
+  createTradeRejectedNotification,
 } from './notificationService.js';
 
 //카드 정보 조회
@@ -37,11 +39,29 @@ const purchasePhotocard = async ({ transactionId, buyerId, quantity }) => {
   if (!transactionId || !buyerId || !quantity || quantity <= 0) {
     throw AppError(400, 'BAD_REQUEST', '올바른 구매 요청 정보가 아닙니다.');
   }
-  return await detailRepository.purchasePhotocard({
+  const result = await detailRepository.purchasePhotocard({
     transactionId,
     buyerId,
     quantity,
   });
+
+  await createPurchaseNotification({
+    sellerId: result.saleInfo.seller.id,
+    buyerNickname: result.buyerNickname,
+    cardGrade: result.saleInfo.card.grade,
+    cardTitle: result.saleInfo.card.title,
+    quantity,
+  });
+
+  if (result.transaction.remainingQuantity === 0) {
+    await createSoldOutNotification({
+      sellerId: result.saleInfo.seller.id,
+      cardGrade: result.saleInfo.card.grade,
+      cardTitle: result.saleInfo.card.title,
+    });
+  }
+
+  return result;
 };
 
 // 교환 제안 등록
@@ -61,8 +81,6 @@ const createExchangeOffer = async ({
     offeredCardId,
     description,
   });
-  console.log(result);
-  console.log('알림 생성 시작');
 
   await createTradeOfferNotification({
     sellerId: result.saleInfo.sellerId,
@@ -96,7 +114,18 @@ const deleteExchange = async (exchangeOfferId) => {
       '교환 제안된 대상 정보를 찾을 수 없습니다.',
     );
   }
-  return await detailRepository.deleteExchange(exchangeOfferId);
+
+  const result =
+    await detailRepository.deleteExchange(exchangeOfferId);
+
+  await createTradeRejectedNotification({
+    proposerId: result.proposerId,
+    sellerNickname: result.sellerNickname,
+    cardGrade: result.cardGrade,
+    cardTitle: result.cardTitle,
+  });
+
+  return result;
 };
 
 //판매글 내리기 (삭제)
@@ -118,13 +147,26 @@ const deleteCardTransaction = async (transactionId) => {
 const acceptExchangeOffer = async ({ exchangeOfferId, loginId }) => {
   //파라미터 유효성 검증
   if (!exchangeOfferId || !loginId) {
-    throw AppError(400, 'BAD_REQUEST', '요청 정보가 부족합니다.');
+    throw AppError(
+      400,
+      'BAD_REQUEST',
+      '요청 정보가 부족합니다.',
+    );
   }
 
-  return await detailRepository.acceptExchangeOffer({
+  const result = await detailRepository.acceptExchangeOffer({
     exchangeOfferId,
     loginId,
   });
+
+  await createTradeAcceptedNotification({
+    proposerId: result.proposerId,
+    sellerNickname: result.sellerNickname,
+    cardGrade: result.cardGrade,
+    cardTitle: result.cardTitle,
+  });
+
+  return result;
 };
 
 export default {
