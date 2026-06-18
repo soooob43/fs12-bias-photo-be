@@ -8,7 +8,6 @@ import {
 
 //카드 정보 조회
 const getPhotocard = async (transactionId) => {
-  console.log('2', transactionId);
   const transaction = await detailRepository.getMarketDetail(transactionId);
 
   //해당 ID 포토카드 판매 정보가 없는 경우
@@ -17,15 +16,6 @@ const getPhotocard = async (transactionId) => {
       404,
       'TRANSACTION_NOT_FOUND',
       '해당 포토카드의 판매 정보를 찾을 수 없습니다.',
-    );
-  }
-
-  // 해당 판매 정보가 삭제되었을 경우
-  if (transaction.isDeleted) {
-    throw AppError(
-      410,
-      'TRANSACTION_DELETED',
-      '해당 포토카드의 판매 정보가 삭제되었습니다.',
     );
   }
 
@@ -38,11 +28,29 @@ const purchasePhotocard = async ({ transactionId, buyerId, quantity }) => {
   if (!transactionId || !buyerId || !quantity || quantity <= 0) {
     throw AppError(400, 'BAD_REQUEST', '올바른 구매 요청 정보가 아닙니다.');
   }
-  return await detailRepository.purchasePhotocard({
+  const result = await detailRepository.purchasePhotocard({
     transactionId,
     buyerId,
     quantity,
   });
+
+  await createPurchaseNotification({
+    sellerId: result.saleInfo.seller.id,
+    buyerNickname: result.buyerNickname,
+    cardGrade: result.saleInfo.card.grade,
+    cardTitle: result.saleInfo.card.title,
+    quantity,
+  });
+
+  if (result.transaction.remainingQuantity === 0) {
+    await createSoldOutNotification({
+      sellerId: result.saleInfo.seller.id,
+      cardGrade: result.saleInfo.card.grade,
+      cardTitle: result.saleInfo.card.title,
+    });
+  }
+
+  return result;
 };
 
 // 교환 제안 등록
@@ -62,8 +70,6 @@ const createExchangeOffer = async ({
     offeredCardId,
     description,
   });
-  console.log(result);
-  console.log('알림 생성 시작');
 
   await createTradeOfferNotification({
     sellerId: result.saleInfo.sellerId,
@@ -89,18 +95,6 @@ const getExchangeOffer = async (transactionId) => {
   return transaction;
 };
 
-const deleteExchange = async (exchangeOfferId) => {
-  if (!exchangeOfferId) {
-    throw AppError(
-      404,
-      'TRANSACTION_NOT_FOUND',
-      '교환 제안된 대상 정보를 찾을 수 없습니다.',
-      ㄴ,
-    );
-  }
-  return await detailRepository.deleteExchange(exchangeOfferId);
-};
-
 //판매글 내리기 (삭제)
 const deleteCardTransaction = async (transactionId) => {
   const transaction =
@@ -110,23 +104,10 @@ const deleteCardTransaction = async (transactionId) => {
     throw AppError(
       404,
       'TRANSACTION_NOT_FOUND',
-      '해당 포토카드의 판매 정보를 찾을 수 없습니다.',
+      '해당 포토카드의 교환 제안 정보를 찾을 수 없습니다.',
     );
   }
   return transaction;
-};
-
-//교환 수락하기
-const acceptExchangeOffer = async ({ exchangeOfferId, loginId }) => {
-  //파라미터 유효성 검증
-  if (!exchangeOfferId || !loginId) {
-    throw AppError(400, 'BAD_REQUEST', '요청 정보가 부족합니다.');
-  }
-
-  return await detailRepository.acceptExchangeOffer({
-    exchangeOfferId,
-    loginId,
-  });
 };
 
 export default {
@@ -134,7 +115,5 @@ export default {
   purchasePhotocard,
   getExchangeOffer,
   createExchangeOffer,
-  deleteExchange,
   deleteCardTransaction,
-  acceptExchangeOffer,
 };
