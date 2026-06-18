@@ -1,10 +1,11 @@
 import express from 'express';
-import { getMySales } from '../services/mySaleService.js';
+// import { getMySales } from '../services/mySaleService.js';
 import { verifyAccessToken } from '../middlewares/auth.js';
+import mySalesService from '../services/mySalesService.js';
 
 const mySaleController = express.Router();
 
-mySaleController.get('/', verifyAccessToken, async (req, res) => {
+mySaleController.get('/', verifyAccessToken, async (req, res, next) => {
   try {
     const sellerId = req.auth.userId;
 
@@ -13,7 +14,7 @@ mySaleController.get('/', verifyAccessToken, async (req, res) => {
 
     const { grade, genre, saleMethod, soldOut, keyword } = req.query;
 
-    const result = await getMySales({
+    const result = await mySalesService.getMySales({
       sellerId,
       page,
       limit,
@@ -26,11 +27,7 @@ mySaleController.get('/', verifyAccessToken, async (req, res) => {
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error(error);
-
-    return res.status(500).json({
-      message: '나의 판매 포토카드 조회 실패',
-    });
+    next(error);
   }
 });
 
