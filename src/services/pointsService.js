@@ -3,8 +3,24 @@ import prisma from '../config/prisma.js';
 import pointsRepository from '../repositories/pointsRepository.js';
 import AppError from '../utils/appError.js';
 
+const ONE_HOUR = 60 * 60 * 1000;
+const getRandomBoxStatus = async (userId) => {
+  const randomBox = await pointsRepository.findRandomBoxByUserId(userId);
+
+  //최초 사용자
+  if (!randomBox) {
+    return {
+      nextAvailableAt: null,
+    };
+  }
+  const nextAvailableAt = new Date(randomBox.lastOpenedAt.getTime() + ONE_HOUR);
+
+  return {
+    nextAvailableAt: nextAvailableAt > new Date() ? nextAvailableAt : null,
+  };
+};
+
 const drawRandomPoint = async (userId) => {
-  const ONE_HOUR = 60 * 60 * 1000;
   const now = new Date();
   const oneHourAgo = new Date(now.getTime() - ONE_HOUR);
   const findRandomBox = await pointsRepository.findRandomBoxByUserId(userId);
@@ -41,7 +57,6 @@ const drawRandomPoint = async (userId) => {
 
       return {
         earnedPoints: drawPoint,
-        nextAvailableAt: new Date(now.getTime() + ONE_HOUR),
       };
     } catch (error) {
       if (error.code === 'P2002') {
@@ -94,10 +109,9 @@ const drawRandomPoint = async (userId) => {
 
   return {
     earnedPoints: drawPoint,
-    nextAvailableAt: new Date(now.getTime() + ONE_HOUR),
   };
 };
 
-const pointsService = { drawRandomPoint };
+const pointsService = { getRandomBoxStatus, drawRandomPoint };
 
 export default pointsService;
