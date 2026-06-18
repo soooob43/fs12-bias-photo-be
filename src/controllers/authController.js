@@ -5,6 +5,9 @@ import authService from '../services/authService.js';
 import { verifyAccessToken, verifyRefreshToken } from '../middlewares/auth.js';
 import passport from 'passport';
 
+// 쿠키 최대 수명 설정
+const COOKIE_MAX_AGE = 14 * 24 * 60 * 60 * 1000; // 2주
+
 const authController = express.Router();
 
 const isProduction = process.env.NODE_ENV === 'production';
@@ -31,6 +34,7 @@ authController.post('/login', validate(loginSchema), async (req, res, next) => {
       httpOnly: true,
       secure: isProduction,
       sameSite: isProduction ? 'none' : 'lax',
+      maxAge: COOKIE_MAX_AGE,
     });
     return res.status(200).json({
       accessToken: result.accessToken,
@@ -50,6 +54,7 @@ authController.post('/refresh', verifyRefreshToken, async (req, res, next) => {
       httpOnly: true,
       secure: isProduction,
       sameSite: isProduction ? 'none' : 'lax',
+      maxAge: COOKIE_MAX_AGE,
     });
     return res.status(200).json({ accessToken: newAccessToken });
   } catch (error) {
@@ -93,6 +98,7 @@ authController.get(
         httpOnly: true,
         secure: isProduction,
         sameSite: isProduction ? 'none' : 'lax',
+        maxAge: COOKIE_MAX_AGE,
       });
       return res.redirect(
         `${process.env.CLIENT_URL}/oauth?accessToken=${accessToken}`,

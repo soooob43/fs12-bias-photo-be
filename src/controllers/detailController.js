@@ -114,7 +114,8 @@ router.patch(
   verifyAccessToken,
   async (req, res, next) => {
     try {
-      const { exchangeOfferId, loginId } = req.body;
+      const { exchangeOfferId } = req.body;
+      const loginId = req.auth.userId;
 
       const result = await detailService.acceptExchangeOffer({
         exchangeOfferId,
