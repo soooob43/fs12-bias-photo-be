@@ -3,12 +3,17 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import authRepository from '../repositories/authRepository.js';
 import AppError from '../utils/appError.js';
 
+const GOOGLE_CALLBACK_URL =
+  process.env.NODE_ENV === 'production'
+    ? 'https://fs12-bias-photo-be.onrender.com/auth/google/callback'
+    : `http://localhost:${process.env.PORT}/auth/google/callback`;
+
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: `http://localhost:${process.env.PORT}/auth/google/callback`,
+      callbackURL: GOOGLE_CALLBACK_URL,
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
