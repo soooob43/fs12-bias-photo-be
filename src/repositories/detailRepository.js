@@ -148,32 +148,7 @@ const purchasePhotocard = async ({ transactionId, buyerId, quantity }) => {
       },
     });
     // 리렌더링용 신규 데이터 반환 및 로그용 데이터 반환
-    const saleInfo = await t.transaction.findUnique({
-      where: {
-        id: Number(transactionId),
-      },
-      include: {
-        card: {
-          select: {
-            title: true,
-            grade: true,
-          },
-        },
-        seller: {
-          select: {
-            id: true,
-            nickname: true,
-          },
-        },
-      },
-    });
-
-    return {
-      transaction: updatedTransaction,
-      history,
-      saleInfo,
-      buyerNickname: buyer.nickname,
-    };
+    return { transaction: updatedTransaction, history };
   });
 };
 
@@ -294,6 +269,21 @@ const deleteExchange = async (exchangeOfferId) => {
       where: { id: Number(exchangeOfferId) },
       include: {
         offeredCard: true,
+        listing: {
+          include: {
+            card: {
+              select: {
+                title: true,
+                grade: true,
+              },
+            },
+            seller: {
+              select: {
+                nickname: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -327,7 +317,7 @@ const deleteExchange = async (exchangeOfferId) => {
     });
 
     //교환제안의 isDeleted 값을 true로 변경하여 교환제안카드 안보이게 하기
-    return await t.exchangeOffer.update({
+    await t.exchangeOffer.update({
       where: {
         id: exchangeOffer.id,
       },
@@ -335,6 +325,13 @@ const deleteExchange = async (exchangeOfferId) => {
         isDeleted: true,
       },
     });
+
+    return {
+      proposerId: exchangeOffer.proposerId,
+      sellerNickname: exchangeOffer.listing.seller.nickname,
+      cardGrade: exchangeOffer.listing.card.grade,
+      cardTitle: exchangeOffer.listing.card.title,
+    };
   });
 };
 
@@ -383,7 +380,21 @@ const acceptExchangeOffer = async ({ exchangeOfferId, loginId }) => {
     const exchangeOffer = await t.exchangeOffer.findUnique({
       where: { id: Number(exchangeOfferId) },
       include: {
-        listing: true, // transaction 테이블
+        listing: {
+          include: {
+            card: {
+              select: {
+                title: true,
+                grade: true,
+              },
+            },
+            seller: {
+              select: {
+                nickname: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -463,12 +474,19 @@ const acceptExchangeOffer = async ({ exchangeOfferId, loginId }) => {
     });
 
     // 교환 제안 레코드의 isDeleted 필드를 true로 변경(교환제안 목록에서 안보이게 함)
-    return await t.exchangeOffer.update({
+    await t.exchangeOffer.update({
       where: { id: exchangeOffer.id },
       data: {
         isDeleted: true,
       },
     });
+
+    return {
+      proposerId: exchangeOffer.proposerId,
+      sellerNickname: transaction.seller.nickname,
+      cardGrade: transaction.card.grade,
+      cardTitle: transaction.card.title,
+    };
   });
 };
 
