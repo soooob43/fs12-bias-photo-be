@@ -148,7 +148,32 @@ const purchasePhotocard = async ({ transactionId, buyerId, quantity }) => {
       },
     });
     // 리렌더링용 신규 데이터 반환 및 로그용 데이터 반환
-    return { transaction: updatedTransaction, history };
+    const saleInfo = await t.transaction.findUnique({
+      where: {
+        id: Number(transactionId),
+      },
+      include: {
+        card: {
+          select: {
+            title: true,
+            grade: true,
+          },
+        },
+        seller: {
+          select: {
+            id: true,
+            nickname: true,
+          },
+        },
+      },
+    });
+
+    return {
+      transaction: updatedTransaction,
+      history,
+      saleInfo,
+      buyerNickname: buyer.nickname,
+    };
   });
 };
 

@@ -63,7 +63,6 @@ const purchasePhotocard = async ({ transactionId, buyerId, quantity }) => {
 
   return result;
 };
-};
 
 // 교환 제안 등록
 const createExchangeOffer = async ({
@@ -82,8 +81,6 @@ const createExchangeOffer = async ({
     offeredCardId,
     description,
   });
-  console.log(result);
-  console.log('알림 생성 시작');
 
   await createTradeOfferNotification({
     sellerId: result.saleInfo.sellerId,
