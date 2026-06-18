@@ -1,19 +1,18 @@
 import express from 'express';
-
 import { verifyAccessToken } from '../middlewares/auth.js';
-
 import {
   getNotifications,
   getUnreadCount,
   readNotification,
   readNotifications,
 } from '../services/notificationService.js';
-
 import {
   getNotificationsSchema,
   readNotificationSchema,
   readNotificationsSchema,
 } from '../schemas/notification.schema.js';
+import { connectSse } from '../utils/sseManager.js';
+import jwt from 'jsonwebtoken';
 
 const notificationController = express.Router();
 
@@ -97,5 +96,20 @@ notificationController.patch(
     }
   },
 );
+
+notificationController.get('/stream', async (req, res, next) => {
+  try {
+    const { token } = req.query;
+
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_ACCESS_SECRET,
+    );
+
+    connectSse(decoded.userId, req, res);
+  } catch (error) {
+    next(error);
+  }
+});
 
 export default notificationController;

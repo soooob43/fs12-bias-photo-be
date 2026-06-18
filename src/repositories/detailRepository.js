@@ -163,7 +163,17 @@ const createExchangeOffer = async ({
   return await prisma.$transaction(async (t) => {
     //대상 판매글 조회
     const transaction = await t.transaction.findUnique({
-      where: { id: Number(listingId) },
+      where: {
+        id: Number(listingId),
+      },
+      include: {
+        card: {
+          select: {
+            title: true,
+            grade: true,
+          },
+        },
+      },
     });
 
     if (!transaction || transaction.isDeleted) {
@@ -218,7 +228,10 @@ const createExchangeOffer = async ({
       },
     });
 
-    return newOffer;
+    return {
+      ...newOffer,
+      saleInfo: transaction,
+    };
   });
 };
 
