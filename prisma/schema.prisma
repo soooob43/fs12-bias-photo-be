@@ -119,7 +119,7 @@ model User {
   notifications      Notification[]
   point              UserPoint?           
   pointHistories     PointHistory[]
-  randomBoxes        RandomBox[]
+  randomBox          RandomBox?
   salesHistories     TransactionHistory[] @relation("HistorySeller")
   purchasesHistories TransactionHistory[] @relation("HistoryBuyer")
 
@@ -335,7 +335,7 @@ model PointHistory {
 model RandomBox {
   id           Int      @id @default(autoincrement())
   /// 유저 아이디
-  userId       String   @map("user_id") @db.Uuid
+  userId       String   @unique @map("user_id") @db.Uuid
   /// 랜덤 상자에서 획득한 포인트
   earnedPoints Int      @map("earned_points")
   /// 랜덤 상자 오픈 시간
@@ -345,8 +345,6 @@ model RandomBox {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("random_boxes")
-
-  @@index([userId])
 }
 
 /// 거래 내역 로그 테이블
