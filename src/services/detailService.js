@@ -94,7 +94,6 @@ const deleteExchange = async (exchangeOfferId) => {
       404,
       'TRANSACTION_NOT_FOUND',
       '교환 제안된 대상 정보를 찾을 수 없습니다.',
-      ㄴ,
     );
   }
   return await detailRepository.deleteExchange(exchangeOfferId);
