@@ -67,7 +67,7 @@ async function main() {
   const pointsToInsert = [];
   const userIds = [];
 
-  for (let i = 1; i <= 1000; i++) {
+  for (let i = 1; i <= 100; i++) {
     const userId = fakerEN.string.uuid();
     userIds.push(userId);
     const createdAt = fakerEN.date.past({ years: 1 });
@@ -101,7 +101,7 @@ async function main() {
   // ==========================================
   console.log('⏳ [2/4] 포토카드 도안 2,000개 생성 중...');
   const cardsToInsert = [];
-  for (let i = 1; i <= 2000; i++) {
+  for (let i = 1; i <= 200; i++) {
     cardsToInsert.push({
       creatorId: fakerEN.helpers.arrayElement(userIds),
       title: `${prefixes[i % prefixes.length]} ${themes[i % themes.length]} ${postfixes[i % postfixes.length]}`,
@@ -167,7 +167,7 @@ async function main() {
   const transactionTasks = [];
 
   // 처리할 작업(Task)들을 배열에 미리 정의
-  for (let i = 1; i <= 4000; i++) {
+  for (let i = 1; i <= 500; i++) {
     const sellerId = fakerEN.helpers.arrayElement(userIds);
     const userOwns =
       ownershipsByOwner[sellerId]?.filter((o) => o.status === 'IN_GALLERY') ||
@@ -195,7 +195,7 @@ async function main() {
       txData: {
         sellerId: sellerId,
         cardId: targetCardId,
-        price: fakerEN.number.int({ min: 10, max: 10000 }),
+        price: fakerEN.number.int({ min: 1, max: 20 }),
         totalQuantity: sellQty,
         remainingQuantity: sellQty,
         exchangeGrade: fakerEN.helpers.arrayElement(grades),
