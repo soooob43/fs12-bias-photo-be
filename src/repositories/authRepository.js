@@ -30,7 +30,8 @@ const createUser = async (userData) => {
       },
     });
     await tx.userPoint.create({
-      data: { userId: user.id },
+      // 테스트를 위해 회원가입시 10만 포인트 지급
+      data: { userId: user.id, balance: 100000 },
     });
     return user;
   });

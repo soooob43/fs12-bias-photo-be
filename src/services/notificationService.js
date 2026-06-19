@@ -66,11 +66,7 @@ export const readNotifications = async ({ notificationIds, userId }) => {
   });
 };
 
-export const createNotification = async ({
-  userId,
-  type,
-  message,
-}) => {
+export const createNotification = async ({ userId, type, message }) => {
   const notification = await createNotificationRepository({
     userId,
     type,
