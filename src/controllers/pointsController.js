@@ -4,17 +4,35 @@ import pointsService from '../services/pointsService.js';
 
 const pointsController = express.Router();
 
-pointsController.post('/draw', verifyAccessToken, async (req, res, next) => {
-  try {
-    const userId = req.auth.userId;
+pointsController.get(
+  '/random-box',
+  verifyAccessToken,
+  async (req, res, next) => {
+    try {
+      const userId = req.auth.userId;
+      const nextAvailableAt = await pointsService.getRandomBoxStatus(userId);
 
-    const { earnedPoints, nextAvailableAt } =
-      await pointsService.drawRandomPoint(userId);
+      return res.status(200).json(nextAvailableAt);
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
-    return res.status(200).json({ earnedPoints, nextAvailableAt });
-  } catch (error) {
-    next(error);
-  }
-});
+pointsController.post(
+  '/random-box',
+  verifyAccessToken,
+  async (req, res, next) => {
+    try {
+      const userId = req.auth.userId;
+
+      const earnedPoints = await pointsService.drawRandomPoint(userId);
+
+      return res.status(200).json(earnedPoints);
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
 export default pointsController;
