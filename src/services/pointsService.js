@@ -4,6 +4,9 @@ import pointsRepository from '../repositories/pointsRepository.js';
 import AppError from '../utils/appError.js';
 
 const ONE_HOUR = 60 * 60 * 1000;
+const RANDOM_BOX_MIN_POINT = 10;
+const RANDOM_BOX_MAX_POINT = 50;
+
 const getRandomBoxStatus = async (userId) => {
   const randomBox = await pointsRepository.findRandomBoxByUserId(userId);
 
@@ -25,7 +28,10 @@ const drawRandomPoint = async (userId) => {
   const oneHourAgo = new Date(now.getTime() - ONE_HOUR);
   const findRandomBox = await pointsRepository.findRandomBoxByUserId(userId);
 
-  const drawPoint = Math.floor(Math.random() * 41) + 10;
+  const drawPoint =
+    Math.floor(
+      Math.random() * (RANDOM_BOX_MAX_POINT - RANDOM_BOX_MIN_POINT + 1),
+    ) + RANDOM_BOX_MIN_POINT;
 
   if (!findRandomBox) {
     try {
