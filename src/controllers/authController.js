@@ -1,0 +1,112 @@
+import express from 'express';
+import { loginSchema, signupSchema } from '../schemas/auth.schema.js';
+import validate from '../middlewares/validate.js';
+import authService from '../services/authService.js';
+import { verifyAccessToken, verifyRefreshToken } from '../middlewares/auth.js';
+import passport from 'passport';
+
+// 쿠키 최대 수명 설정
+const COOKIE_MAX_AGE = 14 * 24 * 60 * 60 * 1000; // 2주
+
+const authController = express.Router();
+
+const isProduction = process.env.NODE_ENV === 'production';
+
+authController.post(
+  '/signup',
+  validate(signupSchema),
+  async (req, res, next) => {
+    try {
+      const user = await authService.signup(req.validatedData);
+      return res
+        .status(201)
+        .json({ message: '회원가입이 완료되었습니다.', user });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+authController.post('/login', validate(loginSchema), async (req, res, next) => {
+  try {
+    const result = await authService.login(req.validatedData);
+    res.cookie('refreshToken', result.refreshToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
+      maxAge: COOKIE_MAX_AGE,
+    });
+    return res.status(200).json({
+      accessToken: result.accessToken,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+authController.post('/refresh', verifyRefreshToken, async (req, res, next) => {
+  try {
+    const { newAccessToken, newRefreshToken } = await authService.refresh(
+      req.auth.userId,
+      req.cookies.refreshToken,
+    );
+    res.cookie('refreshToken', newRefreshToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
+      maxAge: COOKIE_MAX_AGE,
+    });
+    return res.status(200).json({ accessToken: newAccessToken });
+  } catch (error) {
+    next(error);
+  }
+});
+
+authController.post('/logout', verifyRefreshToken, async (req, res, next) => {
+  try {
+    await authService.logout(req.auth.userId);
+
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
+    });
+    return res.status(200).json({ message: '로그아웃 되었습니다.' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+authController.get(
+  '/google',
+  passport.authenticate('google', {
+    scope: ['profile', 'email'],
+  }),
+);
+
+authController.get(
+  '/google/callback',
+  passport.authenticate('google', {
+    session: false,
+  }),
+  async (req, res, next) => {
+    try {
+      const { accessToken, refreshToken } = await authService.googleLogin(
+        req.user.id,
+      );
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
+        maxAge: COOKIE_MAX_AGE,
+      });
+      return res.redirect(
+        `${process.env.CLIENT_URL}/oauth?accessToken=${accessToken}`,
+      );
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+export default authController;
