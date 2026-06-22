@@ -180,6 +180,9 @@ prisma
 | PATCH | `/notifications/read` | 알림 일괄 읽음 처리 | Access Token |
 | POST | `/points/draw` | 랜덤 포인트 뽑기 | Access Token |
 
+## 시스템 아키텍처
+<img width="1571" height="962" alt="중급프로젝트_4팀_아키텍처" src="https://github.com/user-attachments/assets/78b189f0-1559-4ba2-8f83-492dc91c809a" />
+
 ## 실행 방법
 
 ### 1. 패키지 설치
@@ -206,22 +209,20 @@ CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
 ```
-### 3. 시스템 아키텍처
-<img width="1571" height="962" alt="중급프로젝트_4팀_아키텍처" src="https://github.com/user-attachments/assets/78b189f0-1559-4ba2-8f83-492dc91c809a" />
 
-### 4. Prisma Client 생성
+### 3. Prisma Client 생성
 
 ```bash
 npm run prisma:generate
 ```
 
-### 5. 데이터베이스 마이그레이션
+### 4. 데이터베이스 마이그레이션
 
 ```bash
 npm run prisma:migrate
 ```
 
-### 6. 개발 서버 실행
+### 5. 개발 서버 실행
 
 ```bash
 npm run dev
