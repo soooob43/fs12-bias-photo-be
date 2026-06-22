@@ -33,6 +33,16 @@ const getMarketDetail = async (transactionId) => {
       },
     },
   });
+  // 데이터가 아예 없거나, 이미 판매내리기를 통해 삭제(isDeleted: true)된 경우 404 에러 던지기
+  if (!transaction || transaction.isDeleted) {
+    throw AppError(
+      404,
+      'TRANSACTION_NOT_FOUND',
+      '존재하지 않거나 판매가 종료된 포토카드입니다.',
+    );
+  }
+
+  return transaction;
 };
 
 //구매자뷰 상세페이지 내 포토카드 구매하기 API (다수테이블 변경으로 1개 트랜잭션으로 원자성 보장)
