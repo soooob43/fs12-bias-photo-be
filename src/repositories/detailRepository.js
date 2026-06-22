@@ -137,6 +137,46 @@ const purchasePhotocard = async ({ transactionId, buyerId, quantity }) => {
       },
     });
 
+    //판매완료(잔여카드0장) 이면 엮여있는 교환 제시 카드 모두 '보유중'으로 상태 변경
+    if (updatedTransaction.remainingQuantity === 0) {
+      //삭제되지 않은 교환 제안 목록 조회
+      const activeOffers = await t.exchangeOffer.findMany({
+        where: {
+          listingId: updatedTransaction.id,
+          isDeleted: false,
+        },
+        select: {
+          offeredCardId: true,
+        },
+      });
+
+      if (activeOffers.length > 0) {
+        const offeredCardIds = activeOffers.map((offer) => offer.offeredCardId);
+
+        // 교환 제시되어 있는 카드들의 상태를 'ON_EXCHANGE' -> 'IN_GALLERY'로 일괄 변경
+        await t.cardOwnership.updateMany({
+          where: {
+            id: { in: offeredCardIds },
+            status: 'ON_EXCHANGE',
+          },
+          data: {
+            status: 'IN_GALLERY',
+          },
+        });
+
+        // 동일카드 교환제안 내역도 숨김(isDeleted: true) 처리
+        await t.exchangeOffer.updateMany({
+          where: {
+            listingId: updatedTransaction.id,
+            isDeleted: false,
+          },
+          data: {
+            isDeleted: true,
+          },
+        });
+      }
+    }
+
     //판매히스토리 추가
     const history = await t.transactionHistory.create({
       data: {
